@@ -1,0 +1,12 @@
+# Used by the shared security workflow. Rendered chart manifests are scanned by `make checkov`,
+# which renders them first; here Checkov reads Terraform and the Argo CD manifests as committed.
+directory:
+  - infra/terraform
+  - gitops
+framework:
+  - terraform
+  - kubernetes
+skip-path:
+  - \.terraform
+quiet: true
+compact: true

@@ -1,0 +1,46 @@
+# CLAUDE.md
+
+Project instructions for `terraform-aws-eks-gitops-lab`. Global rules in `~/.claude/CLAUDE.md` also apply.
+
+## Overview
+
+Portfolio lab: Amazon EKS in Terraform, a Helm chart for a fictional workload ("Harbor Goods" storefront), and an
+Argo CD app-of-apps with one folder per environment. Everything is verified offline with `make verify`; the only
+AWS-touching target is the manual `make test-live`.
+
+## Layout
+
+| Path | Purpose |
+| --- | --- |
+| `infra/terraform/modules/<name>/` | network, eks, karpenter, observability, argocd-bootstrap, platform (composition) |
+| `infra/terraform/modules/<name>/tests/` | `terraform test` with mocked providers (`infra/terraform/tests/mocks/`) |
+| `infra/terraform/envs/{dev,prod}/` | thin roots; their tests cross-check names against `gitops/` |
+| `charts/storefront/` | Helm chart with strict `values.schema.json` and `ci/` values |
+| `gitops/{projects,applications}/` | AppProjects and environment-neutral Applications |
+| `gitops/environments/<env>/` | Kustomize root of each app-of-apps, env patches, Karpenter pools, app values |
+| `tests/` | pytest render assertions on the chart and the app-of-apps |
+| `scripts/` | `install-tools.sh`, `render.sh`, `test-live.sh` |
+| `docs/adr/`, `docs/diagrams/` | decisions and architecture views |
+
+## Commands
+
+- `make verify`: everything offline (Terraform, Helm, kubeconform, pytest, Checkov, Trivy).
+- `make terraform`, `make helm`, `make kubeconform`, `make render-test`, `make checkov`, `make trivy`: parts of it.
+- `make test-live`: manual only, creates billable resources in the `dev` profile account. Never run it unasked.
+
+## Coupled names
+
+Terraform creates and `gitops/` references these; change both sides together. The env tests fail otherwise.
+
+- Cluster and VPC `Name` tag: `harbor-goods-<env>`.
+- Karpenter interruption queue `harbor-goods-<env>-karpenter`, node role `harbor-goods-<env>-karpenter-node`.
+- Discovery tag `karpenter.sh/discovery=harbor-goods-<env>` on private subnets and the cluster security group.
+- Load balancer controller chart version and `modules/eks/policies/aws-load-balancer-controller-v<version>.json`.
+
+## Rules
+
+- No scanner skips or lint suppressions. Fix the finding.
+- Pin everything: provider constraints, chart versions, image digests, AMI aliases, action SHAs.
+- Only documentation placeholders: account `111122223333`, `example.com`, `203.0.113.0/24`.
+- Every Terraform behaviour change gets a `tftest.hcl` assertion; every chart or gitops change gets a pytest check.
+- Conventional commits, feature branches, no AI attribution anywhere.
