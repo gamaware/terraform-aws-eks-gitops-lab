@@ -1,7 +1,7 @@
 # Amazon EKS with Terraform, Helm and Argo CD
 
-An application on Amazon EKS, built in Terraform, packaged as a Helm chart and delivered by Argo CD from one folder
-per environment. Everything is checked offline with a single `make verify`.
+This repository runs an application on Amazon EKS using Terraform for infrastructure, Helm for packaging and Argo CD
+for delivery, with a separate folder for each environment. Run `make verify` to check everything offline in one command.
 
 [![ci](https://github.com/gamaware/terraform-aws-eks-gitops-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/gamaware/terraform-aws-eks-gitops-lab/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -11,17 +11,17 @@ per environment. Everything is checked offline with a single `make verify`.
 
 ## What this proves
 
-- **Cluster in Terraform, tested without AWS.** VPC, EKS, managed nodes, add-ons, Karpenter prerequisites and alarms
-  are split into small modules. The 37 `terraform test` runs use mocked providers, so they need no credentials.
-- **Pods get AWS access without keys or node roles.** EKS Pod Identity gives each controller one role bound to one
-  service account. Nodes enforce IMDSv2 with a hop limit of 1, so pods cannot borrow the node's credentials.
-- **The app ships as a Helm chart that rejects unsafe values.** The schema refuses `latest` tags, privileged ports,
-  missing CPU or memory limits, an Ingress without TLS and a PDB that would block node drains.
-- **GitOps with folders per environment, never branches.** An Argo CD app-of-apps syncs `gitops/environments/dev` and
-  `prod`, and sync waves install controllers before the resources that need them. Tests fail if a name in Terraform
-  and a name in the GitOps values drift apart.
-- **Autoscaling and observability built in.** The HPA scales pods and Karpenter scales nodes within set limits.
-  Container Insights, control plane logs and alarms go to CloudWatch and SNS.
+- Small Terraform modules define the VPC, EKS, managed nodes, add-ons, Karpenter prerequisites and alarms.
+  Mocked providers let all 37 `terraform test` runs check the cluster configuration without AWS or credentials.
+- EKS Pod Identity binds one role to one service account for each controller, giving pods AWS access without keys
+  or node roles. A hop limit of 1 and mandatory IMDSv2 on nodes prevent pods from using node credentials.
+- A Helm chart packages the application, and its schema blocks unsafe configuration: `latest` tags, privileged
+  ports, absent CPU or memory limits, an Ingress lacking TLS, or a PDB that would prevent node drains.
+- Environment separation uses folders; it does not use branches. An Argo CD app-of-apps syncs
+  `gitops/environments/dev` and `prod`. Sync waves put controllers in place before dependent resources, and tests
+  catch mismatches between names in Terraform and the GitOps values.
+- Within configured limits, the HPA adjusts pod counts and Karpenter adjusts node capacity. CloudWatch and SNS
+  receive Container Insights, control plane logs and alarms.
 
 ## Inspect the deliverable
 
@@ -38,37 +38,37 @@ per environment. Everything is checked offline with a single `make verify`.
 
 ## Scenario and acceptance criteria
 
-Harbor Goods, a fictional mid-size retailer, wants its storefront web tier on Kubernetes in AWS, with a dev cluster
-for trying changes and a prod cluster that only changes through reviewed pull requests. The platform team must be able
-to rebuild either cluster from code, and the storefront team must not be able to weaken cluster security from its own
-folder.
+The fictional mid-size retailer Harbor Goods wants to host its storefront web tier on Kubernetes in AWS. It needs a
+dev cluster to try changes and a prod cluster where every change goes through a reviewed pull request. Code must let
+the platform team rebuild either cluster. Changes within the storefront team's folder must not let that team reduce
+cluster security.
 
-The lab is done when:
+The following conditions define a completed lab:
 
-- `make verify` passes with no scanner skips and no lint suppressions.
-- Dev and prod are built from the same modules and differ only in their environment root and environment folder.
-- No Helm value or GitOps file contains an account ID, role ARN or VPC ID, other than the placeholder ACM certificate
-  ARN on the Ingress.
-- The storefront runs non-root with a read-only root filesystem, scales between 3 and 12 replicas in prod, keeps at
-  least 2 during node drains, and is reachable only over HTTPS.
-- The Kubernetes API is reachable only from listed CIDR ranges, and cluster admins are listed explicitly.
+- `make verify` must pass without skipping scanner checks or suppressing lint findings.
+- Both dev and prod must use the same modules, with differences confined to their environment roots and folders.
+- Helm values and GitOps files must exclude account IDs, role ARNs and VPC IDs; the placeholder ACM certificate
+  ARN on the Ingress is the sole exception.
+- The storefront must use a non-root process and a read-only root filesystem. In prod, it must scale from 3 to 12
+  replicas, retain at least 2 during node drains and accept traffic exclusively over HTTPS.
+- Access to the Kubernetes API must stay within the listed CIDR ranges, with an explicit list of cluster admins.
 
 ## Architecture
 
 ![Context: a platform engineer changes the repository; Terraform builds the AWS platform, Argo CD syncs the cluster](docs/diagrams/01-context.png)
 
-A platform engineer changes one repository. `terraform apply` builds the AWS side of each environment: VPC, EKS,
-node roles, Pod Identity roles, the Karpenter interruption queue, logs and alarms. It then installs Argo CD with one
-root Application. From there, Argo CD syncs everything inside the cluster from `gitops/environments/<env>`: the load
-balancer controller, metrics-server, Karpenter and its NodePool, the storefront namespace and the storefront chart.
-Shoppers reach the storefront through an ALB that terminates TLS.
+All changes start with a platform engineer working in one repository. For each environment, `terraform apply`
+creates the VPC, EKS, node roles, Pod Identity roles, Karpenter interruption queue, logs and alarms on AWS. Terraform
+then installs Argo CD and a single root Application. Argo CD takes over synchronization of all in-cluster resources
+from `gitops/environments/<env>`, including the load balancer controller, metrics-server, Karpenter and its NodePool,
+the storefront namespace and the storefront chart. An ALB terminates TLS for shoppers accessing the storefront.
 
-The deployment view of one environment, with the numbered request, sync, scaling and telemetry paths, is in
-[`docs/diagrams/02-deployment.png`](docs/diagrams/02-deployment.png). Sources are the `.drawio` files next to it.
+[`docs/diagrams/02-deployment.png`](docs/diagrams/02-deployment.png) shows one environment's deployment with numbered
+paths for requests, synchronization, scaling and telemetry. The neighboring `.drawio` files contain the sources.
 
 ## Verify locally
 
-Prerequisites (versions used to build this repository):
+Local verification requires the tools below; the listed versions are those used to build the repository.
 
 | Tool | Version |
 | --- | --- |
@@ -84,8 +84,9 @@ Prerequisites (versions used to build this repository):
 make verify
 ```
 
-Expected result, in under a minute once providers are cached (the first run downloads the AWS and Helm providers,
-tflint plugins, kubeconform 0.8.0 with checksum verification and CRD schemas):
+With providers already cached, verification should finish in under a minute and produce the output below. On the
+first run, it downloads the AWS and Helm providers, tflint plugins, kubeconform 0.8.0 with checksum verification,
+and CRD schemas.
 
 ```text
 Success! 2 passed, 0 failed.      # terraform test, once per tested module and root: 37 runs in total
@@ -96,9 +97,9 @@ Passed checks: 380, Failed checks: 0, Skipped checks: 0      # Checkov, rendered
 make verify: all offline checks passed
 ```
 
-`make help` lists the individual targets. `make test-live` is separate and manual: it creates billable resources in
-the account behind the `dev` AWS profile and destroys them on exit. Read [`docs/live-test.md`](docs/live-test.md)
-before running it.
+Run `make help` to see each target. The separate `make test-live` target requires a manual run and provisions
+billable resources using the account associated with the `dev` AWS profile, then destroys those resources on exit.
+Before starting it, read [`docs/live-test.md`](docs/live-test.md).
 
 ## Repository map
 
@@ -142,25 +143,27 @@ docs/               ADRs, diagrams, live test guide, cover and social preview
 | gitleaks, detect-secrets | Committed secrets | pre-commit, shared `secrets` workflow |
 | actionlint, zizmor | Workflow bugs and unpinned or over-privileged actions | pre-commit, shared `lint-actions` workflow |
 
-CI runs with `permissions: {}` at the top, `contents: read` per job, actions pinned by SHA and no cloud credentials.
+CI sets `permissions: {}` at the workflow level and `contents: read` for each job. It pins actions by SHA and uses
+no cloud credentials.
 
 ## Limits and production adaptations
 
-- **Simulated:** Harbor Goods, its domain and its ACM certificate are fictional. The storefront image is an
-  unprivileged NGINX that stands in for the real application.
-- **Not run in CI:** nothing here has been applied by the pipeline. `make test-live` is the only path that touches
-  AWS, and only when run by hand.
-- **Out of scope:** cert-manager, ExternalDNS, Kyverno or Gatekeeper policies, a service mesh and a separate GitOps
-  configuration repository.
-- **A real engagement adds:** remote state in S3 with a bootstrap stack, a CI identity that plans and applies through
-  OIDC, a private-only API endpoint reached through a VPN or bastion, the client's own image pipeline and domain, an
-  upgrade runbook, and a handover session.
+- **Simulated:** The retailer Harbor Goods, its domain and its ACM certificate exist only for this fictional
+  scenario. An unprivileged NGINX image serves as the storefront in place of a real application.
+- **Not run in CI:** The pipeline has not applied anything in this repository. Only a manual `make test-live` run
+  touches AWS.
+- **Out of scope:** This lab excludes cert-manager, ExternalDNS, Kyverno or Gatekeeper policies, a service mesh,
+  and a separate repository for GitOps configuration.
+- **A real engagement adds:** Client work includes S3 remote state with a bootstrap stack, a CI identity for
+  planning and applying through OIDC, and a private-only API endpoint accessible through a VPN or bastion.
+  It also includes the client's image pipeline and domain, an upgrade runbook and a handover session.
 
 ## Related work
 
-Part of the [AWS DevOps portfolio](https://github.com/gamaware/aws-devops-portfolio). It backs the Upwork service
-"your app on Kubernetes: Amazon EKS in Terraform, Helm deploys and Argo CD". Alex Garcia teaches Kubernetes and Helm in
-hands-on labs as an adjunct professor at ITESO in Guadalajara, and this repository follows the same approach.
+This repository belongs to the [AWS DevOps portfolio](https://github.com/gamaware/aws-devops-portfolio) and supports
+the Upwork service "your app on Kubernetes: Amazon EKS in Terraform, Helm deploys and Argo CD".
+Alex Garcia uses hands-on labs to teach Kubernetes and Helm as an adjunct professor at ITESO in Guadalajara.
+The repository carries that hands-on lab format into the implementation.
 
 ## License
 
