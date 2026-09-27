@@ -7,7 +7,7 @@ for delivery, with a separate folder for each environment. Run `make verify` to 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Lab](https://img.shields.io/badge/type-lab-2356C2)
 
-![Kubernetes on AWS (EKS): cluster in Terraform, Helm releases, fixes and upgrades](docs/assets/cover.png)
+![Kubernetes on Amazon EKS](docs/assets/cover.png)
 
 ## What this proves
 
@@ -161,9 +161,8 @@ no cloud credentials.
 ## Related work
 
 This repository belongs to the [AWS DevOps portfolio](https://github.com/gamaware/aws-devops-portfolio) and supports
-the Upwork service "your app on Kubernetes: Amazon EKS in Terraform, Helm deploys and Argo CD".
-Alex Garcia uses hands-on labs to teach Kubernetes and Helm as an adjunct professor at ITESO in Guadalajara.
-The repository carries that hands-on lab format into the implementation.
+the "Kubernetes on Amazon EKS" service:
+[Kubernetes on Amazon EKS on Upwork](https://www.upwork.com/freelancers/~014b3520cf9e140103).
 
 ## License
 
