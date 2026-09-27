@@ -1,0 +1,68 @@
+# Defaults are safe for any environment; gitops/environments/<env>/values/storefront.yaml
+# overrides only what differs. values.schema.json rejects unknown keys and unsafe settings.
+
+# Stand-in image for the fictional storefront: an unprivileged NGINX that listens on 8080.
+# Pinned by digest, so the tag is informational only.
+image:
+  repository: public.ecr.aws/nginx/nginx-unprivileged
+  tag: "1.29-alpine"
+  digest: sha256:0c79d56aee561a1d81c63f00eee5fb5fe29279560cdc55e91425133104c7fbe6
+  pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+containerPort: 8080
+
+probes:
+  path: /
+  readiness:
+    initialDelaySeconds: 2
+    periodSeconds: 5
+    failureThreshold: 3
+  liveness:
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 3
+  startup:
+    periodSeconds: 2
+    failureThreshold: 30
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: "1"
+    memory: 256Mi
+
+service:
+  port: 80
+
+ingress:
+  enabled: false
+  host: storefront.example.com
+  # ACM certificate for the host. Required when ingress.enabled is true; the ALB terminates TLS.
+  certificateArn: ""
+  scheme: internet-facing
+  # Share one ALB between Ingresses in the same group to save cost.
+  groupName: ""
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true
+
+# Schedule onto nodes Karpenter launches for workloads.
+nodeSelector:
+  karpenter.sh/nodepool: workloads
+
+podAnnotations: {}

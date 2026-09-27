@@ -1,0 +1,38 @@
+# `helm test` runs this against a live release; it is not part of the offline checks.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "storefront.fullname" . }}-test-connection
+  namespace: {{ .Release.Namespace }}
+  # Not the selector labels: the chart's NetworkPolicy and PDB must not select this pod.
+  labels:
+    helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: test
+    app.kubernetes.io/part-of: harbor-goods
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10101
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: wget
+      image: public.ecr.aws/docker/library/busybox:1.37@sha256:bdf57e528e45e4433820e045b29b4597825a1c9e38353532d90a01445013f82e
+      command: ["wget", "-q", "-O", "/dev/null", "-T", "5", "http://{{ include "storefront.fullname" . }}:{{ .Values.service.port }}{{ .Values.probes.path }}"]
+      resources:
+        requests:
+          cpu: 10m
+          memory: 16Mi
+        limits:
+          memory: 32Mi
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: ["ALL"]

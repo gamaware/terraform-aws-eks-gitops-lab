@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: karpenter
+  namespace: argocd
+spec:
+  source:
+    helm:
+      valuesObject:
+        # Two replicas, spread across AZs by the chart defaults.
+        replicas: 2
+        settings:
+          clusterName: harbor-goods-prod
+          interruptionQueue: harbor-goods-prod-karpenter

@@ -1,0 +1,15 @@
+# Dev: fixed two replicas behind an internet-facing ALB, no HPA.
+replicaCount: 2
+
+ingress:
+  enabled: true
+  host: shop.dev.example.com
+  certificateArn: arn:aws:acm:us-east-1:111122223333:certificate/11111111-2222-3333-4444-555555555555
+  scheme: internet-facing
+
+autoscaling:
+  enabled: false
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

@@ -1,0 +1,24 @@
+# Cluster add-ons. They install CRDs, cluster roles and webhooks, so this project may create
+# cluster-scoped resources, but only from the pinned chart sources and this repository.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform
+  namespace: argocd
+  labels:
+    harbor-goods.example.com/source: this-repo
+spec:
+  description: Cluster add-ons managed by the platform team
+  sourceRepos:
+    - https://github.com/gamaware/terraform-aws-eks-gitops-lab.git
+    - https://aws.github.io/eks-charts
+    - https://kubernetes-sigs.github.io/metrics-server/
+    - public.ecr.aws/karpenter
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: kube-system
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  orphanedResources:
+    warn: true

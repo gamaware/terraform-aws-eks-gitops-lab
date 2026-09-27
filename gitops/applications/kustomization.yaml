@@ -1,0 +1,11 @@
+# Environment-neutral Application definitions. Each environment folder includes this base and
+# patches in its own values; nothing here names a cluster, account or VPC.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespaces.yaml
+  - aws-load-balancer-controller.yaml
+  - metrics-server.yaml
+  - karpenter.yaml
+  - karpenter-nodepools.yaml
+  - storefront.yaml

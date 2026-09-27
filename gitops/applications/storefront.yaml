@@ -1,0 +1,37 @@
+# The storefront chart from charts/storefront. Wave 2: the load balancer controller webhook, the
+# workloads NodePool and the storefront namespace must be ready first. Environment patches set
+# the values file.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: storefront
+  namespace: argocd
+  labels:
+    harbor-goods.example.com/source: this-repo
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: storefront
+  source:
+    repoURL: https://github.com/gamaware/terraform-aws-eks-gitops-lab.git
+    targetRevision: main
+    path: charts/storefront
+    helm:
+      releaseName: storefront
+      valueFiles:
+        - ../../gitops/environments/ENVIRONMENT/values/storefront.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: storefront
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  # The HPA owns the replica count once autoscaling is on.
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas

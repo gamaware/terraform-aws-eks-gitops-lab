@@ -1,0 +1,11 @@
+# Owned by the platform project, so the storefront team cannot relabel its own namespace
+# to a weaker Pod Security level.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: storefront
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/audit: restricted
