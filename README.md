@@ -3,11 +3,14 @@
 This repository runs an application on Amazon EKS using Terraform for infrastructure, Helm for packaging and Argo CD
 for delivery, with a separate folder for each environment. Run `make verify` to check everything offline in one command.
 
-[![ci](https://github.com/gamaware/terraform-aws-eks-gitops-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/gamaware/terraform-aws-eks-gitops-lab/actions/workflows/ci.yml)
+[![CI](https://github.com/gamaware/terraform-aws-eks-gitops-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/gamaware/terraform-aws-eks-gitops-lab/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Lab](https://img.shields.io/badge/type-lab-2356C2)
+![Lab](https://img.shields.io/badge/type-lab-5b6b7f)
 
 ![Kubernetes on Amazon EKS](docs/assets/cover.png)
+
+> **Lab.** Harbor Goods and all data here are fictional. Each repository in this portfolio is a
+> separate engagement with Harbor Goods, a fictional mid-size retailer. Account IDs are AWS documentation examples.
 
 ## What this proves
 
@@ -94,7 +97,7 @@ Summary: 47 resources found in 10 files - Valid: 47, Invalid: 0, Errors: 0, Skip
 50 passed in 0.34s
 Passed checks: 235, Failed checks: 0, Skipped checks: 0      # Checkov, Terraform
 Passed checks: 380, Failed checks: 0, Skipped checks: 0      # Checkov, rendered manifests
-make verify: all offline checks passed
+verify: all checks passed
 ```
 
 Run `make help` to see each target. The separate `make test-live` target requires a manual run and provisions
@@ -121,6 +124,8 @@ docs/               ADRs, diagrams, live test guide, cover and social preview
 ```
 
 ## Decisions and trade-offs
+
+Architecture decision records follow the *Fundamentals of Software Architecture* (2nd ed.) format.
 
 | Number | Title | Status |
 | --- | --- | --- |
