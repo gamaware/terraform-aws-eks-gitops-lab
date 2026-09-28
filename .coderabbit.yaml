@@ -1,0 +1,27 @@
+language: en
+reviews:
+  auto_review:
+    enabled: true
+    drafts: false
+  path_instructions:
+    - path: "infra/terraform/**/*.tf"
+      instructions: >-
+        Check least privilege in IAM policies and trust policies, encryption at rest, and that
+        names used by gitops/ (cluster, Karpenter queue and node role, VPC Name tag) stay in step.
+        Every behaviour change needs a matching assertion in the module's tests/*.tftest.hcl.
+    - path: "charts/**"
+      instructions: >-
+        Keep values.schema.json strict (additionalProperties false) and in step with values.yaml.
+        Pods must stay non-root, read-only root filesystem, all capabilities dropped.
+    - path: "gitops/**"
+      instructions: >-
+        Folders per environment, never branches. Third-party charts pinned to an exact version.
+        Check sync waves: controllers before NodePools before workloads.
+    - path: "**/*.sh"
+      instructions: >-
+        Verify scripts pass shellcheck and shellharden, quote all variables, and have shebangs
+        and executable permissions.
+    - path: "**/*.md"
+      instructions: >-
+        Line length 120 (tables exempt), fenced code blocks with language tags, sentence-case
+        headings, no marketing adjectives.

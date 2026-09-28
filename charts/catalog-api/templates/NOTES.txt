@@ -1,0 +1,13 @@
+{{ include "catalog-api.fullname" . }} is installed in namespace {{ .Release.Namespace }}.
+{{- if .Values.ingress.enabled }}
+
+The ALB serves https://{{ .Values.ingress.host }} once the AWS Load Balancer Controller has
+reconciled the Ingress. Its DNS name:
+
+  kubectl -n {{ .Release.Namespace }} get ingress {{ include "catalog-api.fullname" . }} -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+{{- else }}
+
+No Ingress. Reach it with:
+
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "catalog-api.fullname" . }} 8080:{{ .Values.service.port }}
+{{- end }}

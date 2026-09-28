@@ -1,0 +1,42 @@
+# Karpenter controller. Its AWS side (roles, interruption queue) comes from
+# infra/terraform/modules/karpenter; the names below must match what that module creates.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: karpenter
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: platform
+  source:
+    repoURL: public.ecr.aws/karpenter
+    chart: karpenter
+    targetRevision: 1.14.1
+    helm:
+      releaseName: karpenter
+      # Environment patches add settings.clusterName, settings.interruptionQueue and replicas.
+      valuesObject:
+        serviceAccount:
+          name: karpenter
+        # Karpenter must never run on nodes it manages.
+        nodeSelector:
+          harbor-goods.example.com/pool: system
+        controller:
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              memory: 512Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

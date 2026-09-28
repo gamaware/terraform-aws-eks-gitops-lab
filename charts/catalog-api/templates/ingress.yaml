@@ -1,0 +1,41 @@
+{{- if .Values.ingress.enabled }}
+{{- if not .Values.ingress.certificateArn }}
+{{- fail "ingress.certificateArn is required when ingress.enabled is true: the ALB serves HTTPS only" }}
+{{- end }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "catalog-api.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "catalog-api.labels" . | nindent 4 }}
+  annotations:
+    alb.ingress.kubernetes.io/scheme: {{ .Values.ingress.scheme }}
+    # Targets are pod IPs, so traffic skips the extra kube-proxy hop through a NodePort.
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificateArn | quote }}
+    alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS13-1-2-2021-06
+    alb.ingress.kubernetes.io/healthcheck-path: {{ .Values.probes.path }}
+    {{- with .Values.ingress.inboundCidrs }}
+    # Source ranges for the ALB security group; without it the controller opens the listeners to 0.0.0.0/0.
+    alb.ingress.kubernetes.io/inbound-cidrs: {{ join "," . | quote }}
+    {{- end }}
+    {{- with .Values.ingress.groupName }}
+    alb.ingress.kubernetes.io/group.name: {{ . }}
+    {{- end }}
+spec:
+  ingressClassName: alb
+  rules:
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "catalog-api.fullname" . }}
+                port:
+                  name: http
+{{- end }}

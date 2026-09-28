@@ -1,0 +1,37 @@
+# The catalog-api chart from charts/catalog-api. Wave 2: the load balancer controller webhook, the
+# workloads NodePool and the catalog-api namespace must be ready first. Environment patches set
+# the values file.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: catalog-api
+  namespace: argocd
+  labels:
+    harbor-goods.example.com/source: this-repo
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: catalog-api
+  source:
+    repoURL: https://github.com/gamaware/terraform-aws-eks-gitops-lab.git
+    targetRevision: main
+    path: charts/catalog-api
+    helm:
+      releaseName: catalog-api
+      valueFiles:
+        - ../../gitops/environments/ENVIRONMENT/values/catalog-api.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: catalog-api
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  # The HPA owns the replica count once autoscaling is on.
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas

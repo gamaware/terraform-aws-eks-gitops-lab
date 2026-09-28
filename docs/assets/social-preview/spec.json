@@ -1,0 +1,12 @@
+{
+  "color": "#2356C2",
+  "heading": ["Amazon EKS with", "Helm and Argo CD"],
+  "subtitle": "Terraform · Helm chart · GitOps per environment",
+  "steps": [
+    {"label": "Cluster in Terraform", "icon": "terraform.svg"},
+    {"label": "App as a Helm chart", "icon": "helm.svg"},
+    {"label": "Argo CD for dev and prod", "icon": "argo.svg"}
+  ],
+  "illustration": "illustration.svg",
+  "mark": "mark-kubernetes.svg"
+}
