@@ -13,7 +13,7 @@ All notable changes to this project are documented in this file. The format foll
 - EKS Pod Identity roles for the AWS Load Balancer Controller, Karpenter, the EBS CSI driver and the CloudWatch agent.
 - Container Insights through the `amazon-cloudwatch-observability` add-on, encrypted log groups with retention, an
   encrypted SNS alarm topic and alarms for failed nodes, node CPU and memory, and running pods.
-- `storefront` Helm chart with a strict `values.schema.json`, HPA, PDB, NetworkPolicy, HTTPS-only ALB Ingress and a
+- `catalog-api` Helm chart with a strict `values.schema.json`, HPA, PDB, NetworkPolicy, HTTPS-only ALB Ingress and a
   connection test hook.
 - Argo CD app-of-apps with one folder per environment, AppProjects, sync waves, and Karpenter NodePool and
   EC2NodeClass per environment.

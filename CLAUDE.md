@@ -4,7 +4,7 @@ Project instructions for `terraform-aws-eks-gitops-lab`. Global rules in `~/.cla
 
 ## Overview
 
-Portfolio lab: Amazon EKS in Terraform, a Helm chart for a fictional workload ("Harbor Goods" storefront), and an
+Portfolio lab: Amazon EKS in Terraform, a Helm chart for a fictional workload (the "Harbor Goods" catalog API), and an
 Argo CD app-of-apps with one folder per environment. Everything is verified offline with `make verify`; the only
 AWS-touching target is the manual `make test-live`.
 
@@ -15,7 +15,7 @@ AWS-touching target is the manual `make test-live`.
 | `infra/terraform/modules/<name>/` | network, eks, karpenter, observability, argocd-bootstrap, platform (composition) |
 | `infra/terraform/modules/<name>/tests/` | `terraform test` with mocked providers (`infra/terraform/tests/mocks/`) |
 | `infra/terraform/envs/{dev,prod}/` | thin roots; their tests cross-check names against `gitops/` |
-| `charts/storefront/` | Helm chart with strict `values.schema.json` and `ci/` values |
+| `charts/catalog-api/` | Helm chart with strict `values.schema.json` and `ci/` values |
 | `gitops/{projects,applications}/` | AppProjects and environment-neutral Applications |
 | `gitops/environments/<env>/` | Kustomize root of each app-of-apps, env patches, Karpenter pools, app values |
 | `tests/` | pytest render assertions on the chart and the app-of-apps |

@@ -34,17 +34,16 @@ for delivery, with a separate folder for each environment. Run `make verify` to 
 | Karpenter IAM and interruption queue | [`infra/terraform/modules/karpenter/`](infra/terraform/modules/karpenter/) |
 | Argo CD bootstrap (the only Kubernetes state in Terraform) | [`infra/terraform/modules/argocd-bootstrap/`](infra/terraform/modules/argocd-bootstrap/) |
 | Environment roots | [`infra/terraform/envs/dev/`](infra/terraform/envs/dev/), [`prod/`](infra/terraform/envs/prod/) |
-| Helm chart and its schema | [`charts/storefront/`](charts/storefront/), [`values.schema.json`](charts/storefront/values.schema.json) |
+| Helm chart and its schema | [`charts/catalog-api/`](charts/catalog-api/), [`values.schema.json`](charts/catalog-api/values.schema.json) |
 | App-of-apps per environment | [`gitops/environments/`](gitops/environments/) |
 | Render assertions | [`tests/test_gitops.py`](tests/test_gitops.py), [`tests/test_chart.py`](tests/test_chart.py) |
 | Live test with teardown | [`scripts/test-live.sh`](scripts/test-live.sh), [`docs/live-test.md`](docs/live-test.md) |
 
 ## Scenario and acceptance criteria
 
-The fictional mid-size retailer Harbor Goods wants to host its storefront web tier on Kubernetes in AWS. It needs a
-dev cluster to try changes and a prod cluster where every change goes through a reviewed pull request. Code must let
-the platform team rebuild either cluster. Changes within the storefront team's folder must not let that team reduce
-cluster security.
+The fictional mid-size retailer Harbor Goods wants to run its catalog API on Kubernetes. It needs a dev cluster to
+try changes and a prod cluster where every change goes through a reviewed pull request. Code must let the platform
+team rebuild either cluster. Changes within the catalog team's folder must not let that team reduce cluster security.
 
 The following conditions define a completed lab:
 
@@ -52,7 +51,7 @@ The following conditions define a completed lab:
 - Both dev and prod must use the same modules, with differences confined to their environment roots and folders.
 - Helm values and GitOps files must exclude account IDs, role ARNs and VPC IDs; the placeholder ACM certificate
   ARN on the Ingress is the sole exception.
-- The storefront must use a non-root process and a read-only root filesystem. In prod, it must scale from 3 to 12
+- The catalog API must use a non-root process and a read-only root filesystem. In prod, it must scale from 3 to 12
   replicas, retain at least 2 during node drains and accept traffic exclusively over HTTPS.
 - Access to the Kubernetes API must stay within the listed CIDR ranges, with an explicit list of cluster admins.
 
@@ -64,7 +63,7 @@ All changes start with a platform engineer working in one repository. For each e
 creates the VPC, EKS, node roles, Pod Identity roles, Karpenter interruption queue, logs and alarms on AWS. Terraform
 then installs Argo CD and a single root Application. Argo CD takes over synchronization of all in-cluster resources
 from `gitops/environments/<env>`, including the load balancer controller, metrics-server, Karpenter and its NodePool,
-the storefront namespace and the storefront chart. An ALB terminates TLS for shoppers accessing the storefront.
+the `catalog-api` namespace and chart. An ALB terminates TLS for clients calling the catalog API.
 
 [`docs/diagrams/02-deployment.png`](docs/diagrams/02-deployment.png) shows one environment's deployment with numbered
 paths for requests, synchronization, scaling and telemetry. The neighboring `.drawio` files contain the sources.
@@ -112,12 +111,12 @@ infra/terraform/
     <name>/tests/   terraform test with mocked providers (platform is covered by the root tests)
   envs/dev, prod/   thin roots: sizes, CIDRs, Kubernetes version; tests cross-check names with gitops/
   tests/mocks/      shared mock values (AWS documentation account 111122223333)
-charts/storefront/  Helm chart, values.schema.json, ci/ values, connection test hook
+charts/catalog-api/ Helm chart, values.schema.json, ci/ values, connection test hook
 gitops/
-  projects/         AppProjects: platform, storefront
-  applications/     environment-neutral Applications (add-ons, NodePools, namespaces, storefront)
+  projects/         AppProjects: platform, catalog-api
+  applications/     environment-neutral Applications (add-ons, NodePools, namespaces, catalog-api)
   namespaces/       workload namespaces with Pod Security labels
-  environments/     dev and prod: Kustomize root, patches, Karpenter pools, storefront values
+  environments/     dev and prod: Kustomize root, patches, Karpenter pools, catalog-api values
 tests/              pytest render assertions
 scripts/            render.sh, install-tools.sh, test-live.sh
 docs/               ADRs, diagrams, live test guide, cover and social preview
@@ -154,7 +153,7 @@ no cloud credentials.
 ## Limits and production adaptations
 
 - **Simulated:** The retailer Harbor Goods, its domain and its ACM certificate exist only for this fictional
-  scenario. An unprivileged NGINX image serves as the storefront in place of a real application.
+  scenario. An unprivileged NGINX image serves as the catalog API in place of a real application.
 - **Not run in CI:** The pipeline has not applied anything in this repository. Only a manual `make test-live` run
   touches AWS.
 - **Out of scope:** This lab excludes cert-manager, ExternalDNS, Kyverno or Gatekeeper policies, a service mesh,

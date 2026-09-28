@@ -26,10 +26,10 @@ and alarms.
    default `purpose=portfolio-test` tag.
 4. Waits first for system nodes and then for the `aws-load-balancer-controller`, `metrics-server`, `karpenter` and
    `karpenter-nodepools` Applications to reach `Healthy`.
-5. Waits for the storefront Deployment before confirming that Karpenter launched a `workloads` node and executing the
+5. Waits for the `catalog-api` Deployment before confirming that Karpenter launched a `workloads` node and executing the
    chart's connection test pod against the Service.
 6. Performs cleanup on every exit, regardless of success or failure: disables root Application re-syncing, removes the
-   storefront Application so the load balancer controller deletes its ALB, and removes the NodePools so Karpenter
+   `catalog-api` Application so the load balancer controller deletes its ALB, and removes the NodePools so Karpenter
    terminates its nodes. It then executes `terraform destroy` and lists remaining resources tagged
    `purpose=portfolio-test` or `kubernetes.io/cluster/harbor-goods-dev`.
 
@@ -40,7 +40,7 @@ until destruction succeeds.
 
 - Public HTTPS remains untested because the placeholder ACM certificate in the dev values prevents creation of the
   ALB listener. To test this path, request a certificate for a domain under your control, configure `ingress.host` and
-  `ingress.certificateArn` in `gitops/environments/dev/values/storefront.yaml` on a branch, then run the test with
+  `ingress.certificateArn` in `gitops/environments/dev/values/catalog-api.yaml` on a branch, then run the test with
   `GITOPS_REVISION` pointing to that branch.
 - Applying dev alone leaves prod sizing, multi-AZ NAT and upgrades unverified.
 

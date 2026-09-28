@@ -6,7 +6,7 @@ Accepted
 
 ## Context
 
-The storefront scales with an HPA; pods that do not fit need new nodes. Cluster Autoscaler scales existing node groups
+The catalog API scales with an HPA; pods that do not fit need new nodes. Cluster Autoscaler scales existing node groups
 of fixed instance types. Karpenter launches instances directly from pending pod requirements and consolidates
 underused nodes, but it cannot run on nodes it manages.
 
@@ -28,7 +28,7 @@ limits and a 10% disruption budget, and nodes expire after 30 days. The AMI alia
 ## Compliance
 
 `karpenter.tftest.hcl` checks tag scoping, `iam:PassRole` limited to the node role and the interruption queue.
-`tests/test_gitops.py` checks that AMI aliases are pinned, NodePools have limits and the storefront's node selector
+`tests/test_gitops.py` checks that AMI aliases are pinned, NodePools have limits and the catalog API's node selector
 matches the NodePool name. `tests/test_chart.py` checks that the PDB leaves room to drain.
 
 ## Notes
