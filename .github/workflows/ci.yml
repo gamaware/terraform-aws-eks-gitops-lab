@@ -16,25 +16,25 @@ concurrency:
 
 jobs:
   lint-docs:
-    name: Docs lint
+    name: lint-docs
     permissions:
       contents: read
     uses: gamaware/.github/.github/workflows/lint-docs.yml@1255caafb08b06cc4658318c4dd48f9dea946c9e
 
   lint-actions:
-    name: Workflow lint
+    name: lint-actions
     permissions:
       contents: read
     uses: gamaware/.github/.github/workflows/lint-actions.yml@1255caafb08b06cc4658318c4dd48f9dea946c9e
 
   secrets:
-    name: Secret scan
+    name: secrets
     permissions:
       contents: read
     uses: gamaware/.github/.github/workflows/secrets.yml@1255caafb08b06cc4658318c4dd48f9dea946c9e
 
   security:
-    name: Security scan
+    name: security
     permissions:
       contents: read
     uses: gamaware/.github/.github/workflows/security.yml@1255caafb08b06cc4658318c4dd48f9dea946c9e
@@ -43,7 +43,7 @@ jobs:
       checkov-config: .checkov.yaml
 
   terraform:
-    name: Terraform
+    name: terraform
     permissions:
       contents: read
     uses: gamaware/.github/.github/workflows/terraform.yml@1255caafb08b06cc4658318c4dd48f9dea946c9e
@@ -58,7 +58,7 @@ jobs:
       run-tests: true
 
   helm:
-    name: Helm
+    name: helm
     permissions:
       contents: read
     uses: gamaware/.github/.github/workflows/helm.yml@1255caafb08b06cc4658318c4dd48f9dea946c9e
@@ -67,7 +67,7 @@ jobs:
       kubernetes-version: "1.35.0"
 
   verify:
-    name: make verify
+    name: verify
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -100,5 +100,5 @@ jobs:
 
       # The same entry point as a local run: cross-checks between Terraform, the chart and
       # gitops/, render assertions and the rendered-manifest scans live here.
-      - name: make verify
+      - name: verify
         run: make verify
