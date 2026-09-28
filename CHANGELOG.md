@@ -20,8 +20,8 @@ All notable changes to this project are documented in this file. The format foll
 - Offline verification through `make verify`: mocked `terraform test`, `tflint`, `helm lint`, `kubeconform`, pytest
   render assertions, Checkov and Trivy.
 - Manual `make test-live` for the dev environment, with guaranteed teardown.
-- CI calling the shared `gamaware/.github` reusable workflows pinned to commit
-  `1255caafb08b06cc4658318c4dd48f9dea946c9e`, plus OSSF Scorecard.
+- CI calling the shared `gamaware/.github` reusable workflows pinned by commit SHA (see
+  `.github/workflows/ci.yml`), plus OSSF Scorecard.
 - Seven architecture decision records, context and deployment diagrams, and the social preview.
 - Private API endpoint in every environment (ADR 0007): `endpoint_public_access = false` in the `eks` module, a
   Session Manager relay and Session Manager VPC endpoints in every environment, and `scripts/api-tunnel.sh` for

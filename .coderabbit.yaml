@@ -6,7 +6,7 @@ reviews:
   path_instructions:
     - path: "infra/terraform/**/*.tf"
       instructions: >-
-        Check least privilege in IAM policies and trust policies, encryption at rest, and that
+        Check that IAM policies and trust policies grant only the access needed, encryption at rest, and that
         names used by gitops/ (cluster, Karpenter queue and node role, VPC Name tag) stay in step.
         Every behaviour change needs a matching assertion in the module's tests/*.tftest.hcl.
     - path: "charts/**"
