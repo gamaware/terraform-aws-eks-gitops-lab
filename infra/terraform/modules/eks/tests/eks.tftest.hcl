@@ -4,12 +4,11 @@ mock_provider "aws" {
 }
 
 variables {
-  cluster_name        = "harbor-goods-test"
-  kubernetes_version  = "1.35"
-  subnet_ids          = ["subnet-0123456789abcdef0", "subnet-0123456789abcdef1", "subnet-0123456789abcdef2"]
-  public_access_cidrs = ["203.0.113.10/32"]
-  admin_role_arns     = ["arn:aws:iam::111122223333:role/HarborGoodsPlatformAdmin"]
-  logs_kms_key_arn    = "arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
+  cluster_name       = "harbor-goods-test"
+  kubernetes_version = "1.35"
+  subnet_ids         = ["subnet-0123456789abcdef0", "subnet-0123456789abcdef1", "subnet-0123456789abcdef2"]
+  admin_role_arns    = ["arn:aws:iam::111122223333:role/HarborGoodsPlatformAdmin"]
+  logs_kms_key_arn   = "arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
 }
 
 run "control_plane_is_hardened" {
@@ -122,37 +121,13 @@ run "network_add_ons_install_before_nodes" {
   }
 }
 
-run "private_only_endpoint_when_no_cidrs" {
+run "api_endpoint_is_private_only" {
   command = plan
-
-  variables {
-    public_access_cidrs = []
-  }
 
   assert {
-    condition     = aws_eks_cluster.this.vpc_config[0].endpoint_public_access == false
-    error_message = "With no allowed CIDRs the public endpoint must be off."
+    condition     = aws_eks_cluster.this.vpc_config[0].endpoint_public_access == false && aws_eks_cluster.this.vpc_config[0].endpoint_private_access
+    error_message = "The API endpoint must be private in every environment; operators use the Session Manager relay."
   }
-}
-
-run "rejects_an_endpoint_open_to_the_internet" {
-  command = plan
-
-  variables {
-    public_access_cidrs = ["0.0.0.0/0"]
-  }
-
-  expect_failures = [var.public_access_cidrs]
-}
-
-run "rejects_a_broad_range_that_is_not_0_0_0_0" {
-  command = plan
-
-  variables {
-    public_access_cidrs = ["0.0.0.0/1"]
-  }
-
-  expect_failures = [var.public_access_cidrs]
 }
 
 run "rejects_a_cluster_without_admins" {

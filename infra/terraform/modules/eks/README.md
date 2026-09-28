@@ -63,7 +63,6 @@ Tests: `tests/eks.tftest.hcl` (mocked provider, runs offline with `terraform tes
 | subnet\_ids | Private subnet IDs for the control plane network interfaces and the system node group. | `list(string)` | n/a | yes |
 | log\_retention\_days | Retention of the control plane log group, in days. | `number` | `365` | no |
 | node\_disk\_size\_gib | Root volume size of the system nodes, in GiB. | `number` | `50` | no |
-| public\_access\_cidrs | CIDR blocks allowed to reach the public API endpoint. Empty keeps the endpoint private only. | `list(string)` | `[]` | no |
 | support\_type | EKS upgrade policy: STANDARD stops at end of standard support, EXTENDED keeps paying for extended support. | `string` | `"STANDARD"` | no |
 | system\_node\_count | Size of the managed system node group. | ```object({ min = number max = number desired = number })``` | ```{ "desired": 2, "max": 3, "min": 2 }``` | no |
 | system\_node\_instance\_types | Instance types for the managed system node group. | `list(string)` | ```[ "m7i.large" ]``` | no |
@@ -78,7 +77,7 @@ Tests: `tests/eks.tftest.hcl` (mocked provider, runs offline with `terraform tes
 | cluster\_endpoint | Kubernetes API endpoint. |
 | cluster\_name | Name of the EKS cluster. |
 | cluster\_security\_group\_id | Security group EKS created for the control plane and nodes. |
-| endpoint\_public\_access | Whether the Kubernetes API endpoint is reachable from outside the VPC. |
+| endpoint\_public\_access | Whether the Kubernetes API endpoint is reachable from outside the VPC. Always false. |
 | node\_role\_name | IAM role name of the managed system node group. |
 | pod\_identity\_role\_arns | IAM role ARN per in-cluster controller that uses EKS Pod Identity. |
 | system\_node\_group\_ready | Node group ARN. Downstream Helm releases depend on it so they wait for schedulable nodes. |

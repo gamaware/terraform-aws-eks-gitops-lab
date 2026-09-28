@@ -39,6 +39,6 @@ output "node_role_name" {
 }
 
 output "endpoint_public_access" {
-  description = "Whether the Kubernetes API endpoint is reachable from outside the VPC."
+  description = "Whether the Kubernetes API endpoint is reachable from outside the VPC. Always false."
   value       = aws_eks_cluster.this.vpc_config[0].endpoint_public_access
 }

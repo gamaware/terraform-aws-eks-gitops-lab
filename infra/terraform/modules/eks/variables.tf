@@ -39,22 +39,6 @@ variable "subnet_ids" {
   }
 }
 
-variable "public_access_cidrs" {
-  description = "CIDR blocks allowed to reach the public API endpoint. Empty keeps the endpoint private only."
-  type        = list(string)
-  default     = []
-
-  validation {
-    condition     = !contains(var.public_access_cidrs, "0.0.0.0/0")
-    error_message = "The API endpoint must not be open to 0.0.0.0/0; list the operator or CI egress ranges instead."
-  }
-
-  validation {
-    condition     = alltrue([for c in var.public_access_cidrs : can(cidrnetmask(c)) && tonumber(split("/", c)[1]) >= 16])
-    error_message = "Every entry in public_access_cidrs must be an IPv4 CIDR block of /16 or narrower."
-  }
-}
-
 variable "admin_role_arns" {
   description = "IAM role ARNs granted cluster-admin through EKS access entries."
   type        = list(string)
