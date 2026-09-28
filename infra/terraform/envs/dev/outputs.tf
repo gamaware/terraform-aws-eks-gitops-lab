@@ -17,3 +17,13 @@ output "kubeconfig_command" {
   description = "Command that writes a kubeconfig entry for this cluster."
   value       = "aws eks update-kubeconfig --name ${module.platform.cluster_name} --region ${var.region}"
 }
+
+output "cluster_endpoint" {
+  description = "Kubernetes API endpoint. Private-only runs reach it through Session Manager port forwarding."
+  value       = module.platform.cluster_endpoint
+}
+
+output "private_access" {
+  description = "Session Manager relay, pull-through cache registry and Karpenter instance profile for private-only runs."
+  value       = module.platform.private_access
+}

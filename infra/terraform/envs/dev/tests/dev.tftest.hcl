@@ -59,3 +59,40 @@ run "environment_sizing" {
     error_message = "Dev shares one NAT gateway to save cost."
   }
 }
+
+# Live tests run private-only. These runs use the variables scripts/test-live.sh passes and fail
+# if the live configuration would expose anything to the internet.
+run "live_test_configuration_is_private_only" {
+  command = apply
+
+  variables {
+    private_only        = true
+    public_access_cidrs = []
+  }
+
+  assert {
+    condition     = module.platform.endpoint_public_access == false
+    error_message = "The live cluster's API endpoint must be private."
+  }
+
+  assert {
+    condition     = module.platform.nat_gateway_count == 0 && module.platform.public_subnet_count == 0
+    error_message = "The live VPC must have no NAT gateway, Elastic IP, public subnet or internet gateway."
+  }
+
+  assert {
+    condition     = module.platform.private_access != null && module.platform.argocd_root_path == null
+    error_message = "The live run reaches the cluster through the Session Manager relay and installs no Argo CD."
+  }
+}
+
+run "live_test_rejects_a_public_api_endpoint" {
+  command = plan
+
+  variables {
+    private_only        = true
+    public_access_cidrs = ["203.0.113.10/32"]
+  }
+
+  expect_failures = [var.public_access_cidrs]
+}

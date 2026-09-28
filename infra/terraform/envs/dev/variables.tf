@@ -13,6 +13,17 @@ variable "public_access_cidrs" {
   description = "CIDR blocks allowed to reach the public API endpoint. Empty keeps it private."
   type        = list(string)
   default     = []
+
+  validation {
+    condition     = !(var.private_only && length(var.public_access_cidrs) > 0)
+    error_message = "Live tests run private-only: public_access_cidrs must be empty when private_only is true."
+  }
+}
+
+variable "private_only" {
+  description = "Live tests run private-only: scripts/test-live.sh sets true. No internet path, no public API endpoint, no Argo CD."
+  type        = bool
+  default     = false
 }
 
 variable "gitops_repo_url" {

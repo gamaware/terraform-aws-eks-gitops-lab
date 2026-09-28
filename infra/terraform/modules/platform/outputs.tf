@@ -39,6 +39,26 @@ output "alarm_topic_arn" {
 }
 
 output "argocd_root_path" {
-  description = "Repository path the root Application syncs."
-  value       = module.argocd.root_application_path
+  description = "Repository path the root Application syncs; null when private_only is true (no Argo CD)."
+  value       = one(module.argocd[*].root_application_path)
+}
+
+output "private_access" {
+  description = "Relay instance, pull-through cache registry and prefixes, and Karpenter instance profile; null unless private_only is true."
+  value = var.private_only ? {
+    instance_id                = module.private_access[0].instance_id
+    registry                   = module.private_access[0].registry
+    pull_through_prefixes      = module.private_access[0].pull_through_prefixes
+    karpenter_instance_profile = module.private_access[0].karpenter_instance_profile
+  } : null
+}
+
+output "endpoint_public_access" {
+  description = "Whether the Kubernetes API endpoint is reachable from outside the VPC."
+  value       = module.eks.endpoint_public_access
+}
+
+output "public_subnet_count" {
+  description = "Number of public subnets; zero when private_only is true."
+  value       = length(module.network.public_subnet_ids)
 }

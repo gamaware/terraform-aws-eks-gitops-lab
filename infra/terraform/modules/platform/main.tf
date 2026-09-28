@@ -26,6 +26,7 @@ module "network" {
   cidr               = var.vpc_cidr
   azs                = var.azs
   single_nat_gateway = var.single_nat_gateway
+  private_only       = var.private_only
   kms_key_arn        = module.observability.kms_key_arn
   log_retention_days = var.log_retention_days
   tags               = local.tags
@@ -54,8 +55,31 @@ module "karpenter" {
   tags         = local.tags
 }
 
+# Live tests run private-only: no internet path, so the operator reaches the private API endpoint
+# through this module's Session Manager relay, and Argo CD (which syncs from GitHub) is not
+# installed. See docs/live-test.md.
+module "private_access" {
+  source = "../private-access"
+  count  = var.private_only ? 1 : 0
+
+  name                      = local.cluster_name
+  vpc_id                    = module.network.vpc_id
+  vpc_cidr                  = var.vpc_cidr
+  subnet_id                 = module.network.private_subnet_ids[0]
+  cluster_security_group_id = module.eks.cluster_security_group_id
+  node_role_names           = [module.eks.node_role_name, module.karpenter.node_role_name]
+  karpenter_node_role_name  = module.karpenter.node_role_name
+  tags                      = local.tags
+}
+
+moved {
+  from = module.argocd
+  to   = module.argocd[0]
+}
+
 module "argocd" {
   source = "../argocd-bootstrap"
+  count  = var.private_only ? 0 : 1
 
   environment     = var.environment
   repo_url        = var.gitops_repo_url

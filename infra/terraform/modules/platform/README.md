@@ -21,6 +21,7 @@ through the environment roots (`envs/<env>/tests/`), which also check that Terra
 | karpenter | ../karpenter | n/a |
 | network | ../network | n/a |
 | observability | ../observability | n/a |
+| private\_access | ../private-access | n/a |
 
 ## Inputs
 
@@ -38,6 +39,7 @@ through the environment roots (`envs/<env>/tests/`), which also check that Terra
 | log\_retention\_days | Retention of every platform log group, in days. | `number` | `365` | no |
 | min\_running\_pods | Minimum running pods per namespace before an alarm fires. | `map(number)` | `{}` | no |
 | name | Workload name. The cluster is named after it plus the environment, for example harbor-goods-dev. | `string` | `"harbor-goods"` | no |
+| private\_only | No internet path and no public API endpoint: VPC endpoints, a Session Manager relay and ECR pull-through caches instead, and no Argo CD. The live test sets it. | `bool` | `false` | no |
 | public\_access\_cidrs | CIDR blocks allowed to reach the public API endpoint. Empty keeps it private. | `list(string)` | `[]` | no |
 | system\_node\_instance\_types | Instance types of the managed system node group. | `list(string)` | ```[ "m7i.large" ]``` | no |
 | tags | Tags added to every resource on top of the provider default tags. | `map(string)` | `{}` | no |
@@ -48,12 +50,15 @@ through the environment roots (`envs/<env>/tests/`), which also check that Terra
 | Name | Description |
 | ---- | ----------- |
 | alarm\_topic\_arn | SNS topic that receives every alarm. |
-| argocd\_root\_path | Repository path the root Application syncs. |
+| argocd\_root\_path | Repository path the root Application syncs; null when private\_only is true (no Argo CD). |
 | cluster\_certificate\_authority\_data | Base64-encoded cluster CA certificate. |
 | cluster\_endpoint | Kubernetes API endpoint. |
 | cluster\_name | Name of the EKS cluster. |
+| endpoint\_public\_access | Whether the Kubernetes API endpoint is reachable from outside the VPC. |
 | karpenter\_interruption\_queue\_name | Queue name referenced by the Karpenter Application patch in the environment folder under gitops/environments. |
 | karpenter\_node\_role\_name | Role name referenced by the EC2NodeClass in the environment folder under gitops/environments. |
 | nat\_gateway\_count | Number of NAT gateways. |
+| private\_access | Relay instance, pull-through cache registry and prefixes, and Karpenter instance profile; null unless private\_only is true. |
+| public\_subnet\_count | Number of public subnets; zero when private\_only is true. |
 | vpc\_id | ID of the VPC. |
 <!-- END_TF_DOCS -->

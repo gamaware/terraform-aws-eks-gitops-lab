@@ -8,6 +8,7 @@ module "platform" {
   azs                = ["us-east-1a", "us-east-1b", "us-east-1c"]
   vpc_cidr           = "10.10.0.0/16"
   single_nat_gateway = true
+  private_only       = var.private_only
 
   system_node_instance_types = ["m7i.large"]
   system_node_count = {
