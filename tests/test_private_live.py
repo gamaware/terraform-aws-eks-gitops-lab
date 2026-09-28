@@ -80,6 +80,7 @@ def test_plan_check_accepts_the_private_live_shape():
         ("aws_lb", {"internal": False}),
         ("aws_security_group", {"ingress": [{"cidr_blocks": ["0.0.0.0/0"]}]}),
         ("aws_security_group", {"ingress": [{"ipv6_cidr_blocks": ["::/0"]}]}),
+        ("aws_default_security_group", {"ingress": [{"cidr_blocks": ["0.0.0.0/0"]}]}),
         ("aws_security_group_rule", {"type": "ingress", "cidr_blocks": ["0.0.0.0/0"]}),
         ("aws_vpc_security_group_ingress_rule", {"cidr_ipv6": "::/0"}),
         ("aws_instance", {"associate_public_ip_address": True}),

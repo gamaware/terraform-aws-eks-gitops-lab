@@ -43,7 +43,7 @@ def findings(plan, max_endpoint_cidrs=0):
 
         if kind in ("aws_lb", "aws_alb", "aws_elb") and not after.get("internal"):
             add("load balancer is internet-facing (internal = false)")
-        elif kind == "aws_security_group":
+        elif kind in ("aws_security_group", "aws_default_security_group"):
             for rule in after.get("ingress") or []:
                 opened = _open((rule.get("cidr_blocks") or []) + (rule.get("ipv6_cidr_blocks") or []))
                 if opened:
