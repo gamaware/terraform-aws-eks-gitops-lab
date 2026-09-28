@@ -35,6 +35,21 @@ variable "single_nat_gateway" {
   default     = false
 }
 
+variable "private_only" {
+  description = "Build the VPC with no internet path (no internet gateway, public subnets, NAT or Elastic IP) and reach AWS APIs through VPC endpoints. The live test sets it."
+  type        = bool
+  default     = false
+}
+
+variable "interface_endpoint_services" {
+  description = "AWS services reached through interface VPC endpoints when private_only is true. S3 always gets a gateway endpoint."
+  type        = list(string)
+  default = [
+    "ec2", "ec2messages", "ecr.api", "ecr.dkr", "eks", "eks-auth", "elasticloadbalancing",
+    "logs", "monitoring", "sqs", "ssm", "ssmmessages", "sts",
+  ]
+}
+
 variable "kms_key_arn" {
   description = "KMS key ARN that encrypts the flow log group."
   type        = string

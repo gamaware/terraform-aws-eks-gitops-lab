@@ -94,6 +94,53 @@ run "dev_can_share_one_nat_gateway" {
   }
 }
 
+run "private_only_has_no_internet_path" {
+  command = apply
+
+  variables {
+    private_only = true
+  }
+
+  assert {
+    condition     = length(aws_internet_gateway.this) == 0 && length(aws_subnet.public) == 0
+    error_message = "A private-only VPC has no internet gateway and no public subnets."
+  }
+
+  assert {
+    condition     = length(aws_nat_gateway.this) == 0 && length(aws_eip.nat) == 0 && length(aws_route.private_nat) == 0
+    error_message = "A private-only VPC has no NAT gateway, Elastic IP or default route."
+  }
+
+  assert {
+    condition     = length(aws_route.public_internet) == 0
+    error_message = "A private-only VPC has no route to an internet gateway."
+  }
+
+  assert {
+    condition     = alltrue([for s in ["ec2", "ecr.api", "ecr.dkr", "eks", "eks-auth", "sts", "ssm", "ssmmessages", "ec2messages"] : contains(keys(aws_vpc_endpoint.interface), s)])
+    error_message = "Nodes, controllers and Session Manager need interface endpoints for their AWS APIs."
+  }
+
+  assert {
+    condition     = length(aws_vpc_endpoint.s3) == 1 && aws_vpc_endpoint.s3[0].vpc_endpoint_type == "Gateway"
+    error_message = "ECR image layers come from S3 through a gateway endpoint."
+  }
+
+  assert {
+    condition     = aws_vpc_security_group_ingress_rule.endpoints_https[0].cidr_ipv4 == var.cidr && aws_vpc_security_group_ingress_rule.endpoints_https[0].from_port == 443
+    error_message = "Interface endpoints accept HTTPS from the VPC only."
+  }
+}
+
+run "default_mode_creates_no_endpoints" {
+  command = apply
+
+  assert {
+    condition     = length(aws_vpc_endpoint.interface) == 0 && length(aws_vpc_endpoint.s3) == 0
+    error_message = "Endpoints exist only in private-only mode."
+  }
+}
+
 run "flow_logs_capture_all_traffic_encrypted" {
   command = apply
 

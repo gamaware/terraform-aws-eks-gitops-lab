@@ -6,7 +6,10 @@ locals {
   private_cidrs = [for i in range(local.az_count) : cidrsubnet(var.cidr, 3, i)]
   public_cidrs  = [for i in range(local.az_count) : cidrsubnet(var.cidr, 8, 224 + i)]
 
-  nat_count = var.single_nat_gateway ? 1 : local.az_count
+  # private_only builds a VPC with no path to or from the internet: no internet gateway, no
+  # public subnets, no NAT gateway or Elastic IP. AWS APIs are reached through VPC endpoints.
+  public_count = var.private_only ? 0 : local.az_count
+  nat_count    = var.private_only ? 0 : (var.single_nat_gateway ? 1 : local.az_count)
 }
 
 resource "aws_vpc" "this" {
@@ -25,13 +28,15 @@ resource "aws_default_security_group" "this" {
 }
 
 resource "aws_internet_gateway" "this" {
+  count = var.private_only ? 0 : 1
+
   vpc_id = aws_vpc.this.id
 
   tags = merge(var.tags, { Name = var.name })
 }
 
 resource "aws_subnet" "public" {
-  count = local.az_count
+  count = local.public_count
 
   vpc_id                  = aws_vpc.this.id
   availability_zone       = var.azs[count.index]
@@ -79,22 +84,26 @@ resource "aws_nat_gateway" "this" {
 }
 
 resource "aws_route_table" "public" {
+  count = var.private_only ? 0 : 1
+
   vpc_id = aws_vpc.this.id
 
   tags = merge(var.tags, { Name = "${var.name}-public" })
 }
 
 resource "aws_route" "public_internet" {
-  route_table_id         = aws_route_table.public.id
+  count = var.private_only ? 0 : 1
+
+  route_table_id         = aws_route_table.public[0].id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.this.id
+  gateway_id             = aws_internet_gateway.this[0].id
 }
 
 resource "aws_route_table_association" "public" {
-  count = local.az_count
+  count = local.public_count
 
   subnet_id      = aws_subnet.public[count.index].id
-  route_table_id = aws_route_table.public.id
+  route_table_id = aws_route_table.public[0].id
 }
 
 # One private route table per AZ, so moving from one NAT gateway to one per AZ changes routes
@@ -108,7 +117,7 @@ resource "aws_route_table" "private" {
 }
 
 resource "aws_route" "private_nat" {
-  count = local.az_count
+  count = local.nat_count > 0 ? local.az_count : 0
 
   route_table_id         = aws_route_table.private[count.index].id
   destination_cidr_block = "0.0.0.0/0"

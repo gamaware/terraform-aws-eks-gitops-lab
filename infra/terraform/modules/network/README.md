@@ -39,11 +39,16 @@ Tests: `tests/network.tftest.hcl` (mocked provider, runs offline with `terraform
 | [aws_route_table.public](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table) | resource |
 | [aws_route_table_association.private](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association) | resource |
 | [aws_route_table_association.public](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association) | resource |
+| [aws_security_group.endpoints](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_subnet.private](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
 | [aws_subnet.public](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
 | [aws_vpc.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc) | resource |
+| [aws_vpc_endpoint.interface](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
+| [aws_vpc_endpoint.s3](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
+| [aws_vpc_security_group_ingress_rule.endpoints_https](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_ingress_rule) | resource |
 | [aws_iam_policy_document.flow_logs_assume](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.flow_logs_write](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
 
@@ -54,7 +59,9 @@ Tests: `tests/network.tftest.hcl` (mocked provider, runs offline with `terraform
 | kms\_key\_arn | KMS key ARN that encrypts the flow log group. | `string` | n/a | yes |
 | name | Name prefix for every network resource. | `string` | n/a | yes |
 | cidr | IPv4 CIDR block of the VPC. A /16 leaves room for three /19 private subnets. | `string` | `"10.0.0.0/16"` | no |
+| interface\_endpoint\_services | AWS services reached through interface VPC endpoints when private\_only is true. S3 always gets a gateway endpoint. | `list(string)` | ```[ "ec2", "ec2messages", "ecr.api", "ecr.dkr", "eks", "eks-auth", "elasticloadbalancing", "logs", "monitoring", "sqs", "ssm", "ssmmessages", "sts" ]``` | no |
 | log\_retention\_days | Retention of the VPC flow log group, in days. | `number` | `365` | no |
+| private\_only | Build the VPC with no internet path (no internet gateway, public subnets, NAT or Elastic IP) and reach AWS APIs through VPC endpoints. The live test sets it. | `bool` | `false` | no |
 | single\_nat\_gateway | Use one NAT gateway for all AZs (cheaper, one AZ is a single point of failure) instead of one per AZ. | `bool` | `false` | no |
 | tags | Tags added to every resource. | `map(string)` | `{}` | no |
 
@@ -62,8 +69,9 @@ Tests: `tests/network.tftest.hcl` (mocked provider, runs offline with `terraform
 
 | Name | Description |
 | ---- | ----------- |
+| interface\_endpoint\_services | Services reached through interface VPC endpoints; empty unless private\_only is true. |
 | nat\_gateway\_count | Number of NAT gateways created. |
 | private\_subnet\_ids | Private subnet IDs, one per AZ. Nodes and pods run here. |
-| public\_subnet\_ids | Public subnet IDs, one per AZ. Only internet-facing load balancers and NAT gateways use them. |
+| public\_subnet\_ids | Public subnet IDs, one per AZ. Only internet-facing load balancers and NAT gateways use them; empty when private\_only is true. |
 | vpc\_id | ID of the VPC. |
 <!-- END_TF_DOCS -->
