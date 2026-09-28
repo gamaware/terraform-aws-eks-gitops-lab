@@ -115,10 +115,29 @@ resource "aws_ecr_pull_through_cache_rule" "this" {
   upstream_registry_url = each.value
 }
 
-# The first pull of an image creates its cache repository and imports it from upstream.
+data "aws_default_tags" "current" {}
+
+# Cache repositories are created on first pull, outside Terraform; the template gives them the
+# same tags as everything else, including tags an account requires on create.
+resource "aws_ecr_repository_creation_template" "pull_through" {
+  for_each = local.pull_through
+
+  prefix               = each.key
+  description          = "Pull-through cache repositories for ${each.value}"
+  applied_for          = ["PULL_THROUGH_CACHE"]
+  image_tag_mutability = "IMMUTABLE"
+  resource_tags        = merge(data.aws_default_tags.current.tags, var.tags)
+
+  encryption_configuration {
+    encryption_type = "AES256"
+  }
+}
+
+# The first pull of an image creates its cache repository, tags it from the creation template
+# and imports the image from upstream.
 data "aws_iam_policy_document" "pull_through" {
   statement {
-    actions = ["ecr:BatchImportUpstreamImage", "ecr:CreateRepository"]
+    actions = ["ecr:BatchImportUpstreamImage", "ecr:CreateRepository", "ecr:TagResource"]
     resources = [
       for prefix in keys(local.pull_through) : "arn:${local.partition}:ecr:${local.region}:${local.account}:repository/${prefix}/*"
     ]
