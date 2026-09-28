@@ -78,6 +78,8 @@ Tests: `tests/eks.tftest.hcl` (mocked provider, runs offline with `terraform tes
 | cluster\_endpoint | Kubernetes API endpoint. |
 | cluster\_name | Name of the EKS cluster. |
 | cluster\_security\_group\_id | Security group EKS created for the control plane and nodes. |
+| endpoint\_public\_access | Whether the Kubernetes API endpoint is reachable from outside the VPC. |
+| node\_role\_name | IAM role name of the managed system node group. |
 | pod\_identity\_role\_arns | IAM role ARN per in-cluster controller that uses EKS Pod Identity. |
 | system\_node\_group\_ready | Node group ARN. Downstream Helm releases depend on it so they wait for schedulable nodes. |
 <!-- END_TF_DOCS -->

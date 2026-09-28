@@ -97,3 +97,15 @@ mock_resource "aws_launch_template" {
     latest_version = 1
   }
 }
+
+mock_data "aws_ssm_parameter" {
+  defaults = {
+    insecure_value = "ami-0123456789abcdef0"
+  }
+}
+
+mock_resource "aws_instance" {
+  defaults = {
+    id = "i-0123456789abcdef0"
+  }
+}

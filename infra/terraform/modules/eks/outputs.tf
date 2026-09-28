@@ -32,3 +32,13 @@ output "pod_identity_role_arns" {
   description = "IAM role ARN per in-cluster controller that uses EKS Pod Identity."
   value       = { for k, r in aws_iam_role.pod_identity : k => r.arn }
 }
+
+output "node_role_name" {
+  description = "IAM role name of the managed system node group."
+  value       = aws_iam_role.node.name
+}
+
+output "endpoint_public_access" {
+  description = "Whether the Kubernetes API endpoint is reachable from outside the VPC."
+  value       = aws_eks_cluster.this.vpc_config[0].endpoint_public_access
+}
