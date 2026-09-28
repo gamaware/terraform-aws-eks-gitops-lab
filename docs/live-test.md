@@ -7,7 +7,8 @@ down the dev environment in a real AWS account. CI excludes this test, and `make
 
 Live tests run private-only: a live run creates nothing that is reachable from the internet, nothing with a public IP
 address, and nothing in Route 53. `scripts/test-live.sh` applies `infra/terraform/envs/dev` with
-`private_only = true`, which changes the dev environment as follows:
+`private_only = true`, which changes the dev environment as follows. The rule covers live runs only: the dev and prod
+configurations in the repository keep their internet-facing ALB, NAT egress and optional public endpoint.
 
 - **No internet path.** The VPC has no internet gateway, public subnet, NAT gateway or Elastic IP, and no default
   route. Interface VPC endpoints (EC2, ECR API and Docker, EKS, EKS Auth, Elastic Load Balancing, CloudWatch Logs and
@@ -25,9 +26,9 @@ address, and nothing in Route 53. `scripts/test-live.sh` applies `infra/terrafor
   charts, pinned versions and values with Helm through the tunnel: Karpenter (in isolated-VPC mode, with an instance
   profile Terraform creates because the VPC has no IAM endpoint), the AWS Load Balancer Controller (Shield and WAF
   integration off), metrics-server, the Karpenter NodePools and EC2NodeClass, and the catalog API.
-- **Internal ALB only.** The dev `catalog-api` Ingress uses `scheme: internal` and accepts `10.10.0.0/16` only
-  (`inboundCidrs`); no security group opens `0.0.0.0/0` or `::/0`. Nodes never get public IP addresses: subnets set
-  `map_public_ip_on_launch = false` and both EC2NodeClasses set `associatePublicIPAddress: false`.
+- **Internal ALB only.** `scripts/live_install.py` forces the live catalog API Ingress to `scheme: internal` with
+  `inboundCidrs` set to the VPC range, so no security group opens `0.0.0.0/0` or `::/0`. The live EC2NodeClass sets
+  `associatePublicIPAddress: false`, and subnets set `map_public_ip_on_launch = false`.
 - **No Route 53.** No hosted zone, record or ExternalDNS; the ALB host name is an `example.com` placeholder.
 
 ### Pre-flight

@@ -36,7 +36,7 @@ Terraform creates and `gitops/` references these; change both sides together. Th
 - Karpenter interruption queue `harbor-goods-<env>-karpenter`, node role `harbor-goods-<env>-karpenter-node`.
 - Discovery tag `karpenter.sh/discovery=harbor-goods-<env>` on private subnets and the cluster security group.
 - Load balancer controller chart version and `modules/eks/policies/aws-load-balancer-controller-v<version>.json`.
-- Dev VPC CIDR `10.10.0.0/16`: `envs/dev/main.tf`, dev `inboundCidrs` and `DEV_VPC` in `tests/test_private_live.py`.
+- Dev VPC CIDR `10.10.0.0/16`: `envs/dev/main.tf` and `DEV_VPC` in `tests/test_private_live.py`.
 
 ## Rules
 
@@ -45,5 +45,6 @@ Terraform creates and `gitops/` references these; change both sides together. Th
 - Only documentation placeholders: account `111122223333`, `example.com`, `203.0.113.0/24`.
 - Every Terraform behaviour change gets a `tftest.hcl` assertion; every chart or gitops change gets a pytest check.
 - Live tests run private-only (ADR 0006): dev with `private_only = true` has no internet path, public endpoint or
-  Route 53. `scripts/check_private_plan.py` is a byte-identical copy shared across repos; never edit it here.
+  Route 53. Only the live path is private; the dev and prod examples keep their public ALB, NAT and endpoint
+  options. `scripts/check_private_plan.py` is a byte-identical copy shared across repos; never edit it here.
 - Conventional commits, feature branches, no AI attribution anywhere.

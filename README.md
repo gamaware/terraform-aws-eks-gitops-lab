@@ -95,7 +95,7 @@ and CRD schemas.
 ```text
 Success! 2 passed, 0 failed.      # terraform test, once per tested module and root: 43 runs in total
 Summary: 47 resources found in 10 files - Valid: 47, Invalid: 0, Errors: 0, Skipped: 0
-70 passed, 20 subtests passed in 0.79s
+68 passed, 30 subtests passed in 0.50s
 Passed checks: 276, Failed checks: 0, Skipped checks: 0      # Checkov, Terraform
 Passed checks: 380, Failed checks: 0, Skipped checks: 0      # Checkov, rendered manifests
 verify: all checks passed

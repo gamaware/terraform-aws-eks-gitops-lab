@@ -24,7 +24,9 @@ API endpoint that can be public, and Argo CD pulls from GitHub. None of that is 
 - Argo CD is not installed. `scripts/live_install.py` installs the charts, versions and values the dev Applications
   declare with Helm through the tunnel.
 - Karpenter runs in isolated-VPC mode with an instance profile that Terraform creates, because the VPC has no IAM
-  endpoint. The catalog API Ingress is an internal ALB that accepts the VPC range only.
+  endpoint. The live install forces the catalog API Ingress to an internal ALB that accepts the VPC range only.
+- The rule covers live runs only. The dev and prod configurations in the repository keep their internet-facing ALB,
+  NAT egress and optional public endpoint allow list, because showing that design is the point of the lab.
 
 Before anything is created, the pre-flight tests must pass and `scripts/check_private_plan.py` must find nothing
 internet-facing or Route 53 in the saved plan; only that plan is applied.
