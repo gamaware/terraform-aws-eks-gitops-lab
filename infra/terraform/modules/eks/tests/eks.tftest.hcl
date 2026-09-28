@@ -21,6 +21,11 @@ run "control_plane_is_hardened" {
   }
 
   assert {
+    condition     = length(aws_launch_template.system.network_interfaces) == 0
+    error_message = "System nodes take their network settings from the private subnets and never get a public IP."
+  }
+
+  assert {
     condition     = aws_eks_cluster.this.encryption_config[0].resources == toset(["secrets"])
     error_message = "Kubernetes Secrets must be envelope-encrypted with KMS."
   }

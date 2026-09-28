@@ -1,11 +1,14 @@
-# Dev: fixed two replicas behind an internet-facing ALB, no HPA.
+# Dev: fixed two replicas, no HPA. The live test deploys dev, and live tests run private-only:
+# the ALB is internal and accepts traffic from the dev VPC only (see docs/live-test.md).
 replicaCount: 2
 
 ingress:
   enabled: true
   host: catalog.dev.example.com
   certificateArn: arn:aws:acm:us-east-1:111122223333:certificate/11111111-2222-3333-4444-555555555555
-  scheme: internet-facing
+  scheme: internal
+  inboundCidrs:
+    - 10.10.0.0/16
 
 autoscaling:
   enabled: false

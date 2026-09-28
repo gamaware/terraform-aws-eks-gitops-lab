@@ -47,9 +47,10 @@ resource "aws_subnet" "public" {
 resource "aws_subnet" "private" {
   count = local.az_count
 
-  vpc_id            = aws_vpc.this.id
-  availability_zone = var.azs[count.index]
-  cidr_block        = local.private_cidrs[count.index]
+  vpc_id                  = aws_vpc.this.id
+  availability_zone       = var.azs[count.index]
+  cidr_block              = local.private_cidrs[count.index]
+  map_public_ip_on_launch = false
 
   tags = merge(var.tags, {
     Name                              = "${var.name}-private-${var.azs[count.index]}"

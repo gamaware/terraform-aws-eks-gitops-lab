@@ -18,6 +18,10 @@ metadata:
     alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificateArn | quote }}
     alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS13-1-2-2021-06
     alb.ingress.kubernetes.io/healthcheck-path: {{ .Values.probes.path }}
+    {{- with .Values.ingress.inboundCidrs }}
+    # Source ranges for the ALB security group; without it the controller opens the listeners to 0.0.0.0/0.
+    alb.ingress.kubernetes.io/inbound-cidrs: {{ join "," . | quote }}
+    {{- end }}
     {{- with .Values.ingress.groupName }}
     alb.ingress.kubernetes.io/group.name: {{ . }}
     {{- end }}

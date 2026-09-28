@@ -37,6 +37,11 @@ run "subnets_are_tagged_for_load_balancers_and_karpenter" {
     condition     = alltrue([for s in aws_subnet.public : s.map_public_ip_on_launch == false])
     error_message = "Nothing launched in a public subnet may get a public IP by default."
   }
+
+  assert {
+    condition     = alltrue([for s in aws_subnet.private : s.map_public_ip_on_launch == false])
+    error_message = "Nodes launch in private subnets and must never get a public IP."
+  }
 }
 
 run "subnet_ranges_do_not_overlap" {

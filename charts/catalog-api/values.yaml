@@ -44,6 +44,9 @@ ingress:
   # ACM certificate for the host. Required when ingress.enabled is true; the ALB terminates TLS.
   certificateArn: ""
   scheme: internet-facing
+  # Source CIDRs allowed to reach the ALB. Required for an internal ALB, where it keeps
+  # 0.0.0.0/0 out of the load balancer's security group.
+  inboundCidrs: []
   # Share one ALB between Ingresses in the same group to save cost.
   groupName: ""
 
