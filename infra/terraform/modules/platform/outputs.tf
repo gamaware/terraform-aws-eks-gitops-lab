@@ -62,3 +62,8 @@ output "public_subnet_count" {
   description = "Number of public subnets; zero when private_only is true."
   value       = length(module.network.public_subnet_ids)
 }
+
+output "vpc_cidr" {
+  description = "IPv4 CIDR block of the VPC."
+  value       = module.network.vpc_cidr
+}

@@ -27,3 +27,8 @@ output "private_access" {
   description = "Session Manager relay, pull-through cache registry and Karpenter instance profile for private-only runs."
   value       = module.platform.private_access
 }
+
+output "vpc_cidr" {
+  description = "IPv4 CIDR block of the VPC. The private-only live run limits the internal ALB to it."
+  value       = module.platform.vpc_cidr
+}

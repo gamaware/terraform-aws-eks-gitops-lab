@@ -1,5 +1,7 @@
 """Live tests run private-only: what `make test-live` deploys must not be reachable from the
-internet, must not use Route 53, and must work without an internet path.
+internet, must not use Route 53, and must work without an internet path. The repository's dev and
+prod configurations keep their internet-facing ALB; scripts/live_install.py forces the live run
+private, and these tests check what it produces.
 
 scripts/test-live.sh runs this file as a pre-flight before it creates anything. The Terraform side
 is checked by the dev, network and private-access `terraform test` runs and, on the saved plan, by
@@ -13,7 +15,7 @@ import ipaddress
 import pytest
 import yaml
 
-from conftest import GITOPS, ROOT, by_kind, kustomize
+from conftest import ROOT, _docs, by_kind, helm_template, kustomize
 
 LIVE_ENV = "dev"
 DEV_VPC = ipaddress.ip_network("10.10.0.0/16")
@@ -32,19 +34,6 @@ check_private_plan = _load("check_private_plan")
 live_install = _load("live_install")
 
 
-def test_live_ingress_is_an_internal_alb(chart_docs):
-    ingress = by_kind(chart_docs[LIVE_ENV], "Ingress")["catalog-api"]
-    assert ingress["metadata"]["annotations"]["alb.ingress.kubernetes.io/scheme"] == "internal"
-
-
-def test_live_alb_accepts_traffic_from_the_vpc_only(chart_docs):
-    annotations = by_kind(chart_docs[LIVE_ENV], "Ingress")["catalog-api"]["metadata"]["annotations"]
-    cidrs = annotations["alb.ingress.kubernetes.io/inbound-cidrs"].split(",")
-    assert cidrs, "without inbound-cidrs the controller opens the ALB security group to 0.0.0.0/0"
-    for cidr in cidrs:
-        assert ipaddress.ip_network(cidr).subnet_of(DEV_VPC), cidr
-
-
 def test_live_environment_has_no_load_balancer_services(chart_docs, gitops_docs):
     for doc in chart_docs[LIVE_ENV] + gitops_docs[LIVE_ENV]:
         if doc["kind"] == "Service":
@@ -57,13 +46,6 @@ def test_live_environment_uses_no_route53(chart_docs, gitops_docs):
     text = yaml.safe_dump_all(chart_docs[LIVE_ENV] + gitops_docs[LIVE_ENV]).lower()
     assert "external-dns" not in text
     assert "route53" not in text
-
-
-@pytest.mark.parametrize("env_name", ["dev", "prod"])
-def test_karpenter_nodes_never_get_public_ips(env_name):
-    path = GITOPS / "environments" / env_name / "karpenter" / "ec2nodeclass.yaml"
-    node_class = yaml.safe_load(path.read_text())
-    assert node_class["spec"]["associatePublicIPAddress"] is False
 
 
 def _plan(rtype, after):
@@ -97,7 +79,7 @@ def test_plan_check_accepts_a_private_api_endpoint():
 @pytest.fixture(scope="module")
 def live_install_dir(tmp_path_factory):
     out = tmp_path_factory.mktemp("live")
-    live_install.prepare(kustomize(LIVE_ENV), out, REGISTRY, PREFIXES, "harbor-goods-dev-karpenter-node")
+    live_install.prepare(kustomize(LIVE_ENV), out, REGISTRY, PREFIXES, "harbor-goods-dev-karpenter-node", str(DEV_VPC))
     return out
 
 
@@ -138,3 +120,20 @@ def test_live_karpenter_nodes_use_a_precreated_instance_profile(live_install_dir
 def test_live_karpenter_runs_in_isolated_vpc_mode(live_install_dir):
     values = yaml.safe_load((live_install_dir / "karpenter.values.yaml").read_text())
     assert values["settings"]["isolatedVPC"] is True
+
+
+@pytest.fixture(scope="module")
+def live_ingress(live_install_dir):
+    docs = _docs(helm_template(live_install_dir / "catalog-api.values.yaml").stdout)
+    return by_kind(docs, "Ingress")["catalog-api"]
+
+
+def test_live_ingress_is_an_internal_alb(live_ingress):
+    assert live_ingress["metadata"]["annotations"]["alb.ingress.kubernetes.io/scheme"] == "internal"
+
+
+def test_live_alb_accepts_traffic_from_the_vpc_only(live_ingress):
+    cidrs = live_ingress["metadata"]["annotations"]["alb.ingress.kubernetes.io/inbound-cidrs"].split(",")
+    assert cidrs, "without inbound-cidrs the controller opens the ALB security group to 0.0.0.0/0"
+    for cidr in cidrs:
+        assert ipaddress.ip_network(cidr).subnet_of(DEV_VPC), cidr

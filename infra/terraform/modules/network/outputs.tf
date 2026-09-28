@@ -3,6 +3,11 @@ output "vpc_id" {
   value       = aws_vpc.this.id
 }
 
+output "vpc_cidr" {
+  description = "IPv4 CIDR block of the VPC."
+  value       = aws_vpc.this.cidr_block
+}
+
 output "private_subnet_ids" {
   description = "Private subnet IDs, one per AZ. Nodes and pods run here."
   value       = aws_subnet.private[*].id

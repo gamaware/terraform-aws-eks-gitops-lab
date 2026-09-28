@@ -8,12 +8,17 @@ repositories instead of their public registries, because the VPC has no internet
 
 Usage:
     live_install.py APPS_YAML OUT_DIR --registry HOST --prefix UPSTREAM=PREFIX [...] --instance-profile NAME
+                    --vpc-cidr CIDR
 
 APPS_YAML is `kubectl kustomize gitops/environments/dev`. OUT_DIR receives:
     releases.tsv                 name, chart, repository ("-" for OCI), version, namespace
     <name>.values.yaml           values for each release, images rewritten to the registry
-    catalog-api.values.yaml      the dev catalog-api values, image rewritten
-    karpenter.yaml               the dev NodePools and EC2NodeClass, with a pre-created instance profile
+    catalog-api.values.yaml      the dev catalog-api values, image rewritten, ALB forced internal to the VPC
+    karpenter.yaml               the dev NodePools and EC2NodeClass, with a pre-created instance profile and no
+                                 public IP addresses
+
+The repository's dev and prod configurations stay as designed (internet-facing ALB); only the live run is
+forced private here.
 """
 
 import argparse
@@ -80,7 +85,7 @@ def chart_reference(source):
     return f"oci://{repo}/{source['chart']}", "-"
 
 
-def prepare(apps_docs, out_dir, registry, prefixes, instance_profile):
+def prepare(apps_docs, out_dir, registry, prefixes, instance_profile, vpc_cidr):
     apps = {d["metadata"]["name"]: d for d in apps_docs if d and d.get("kind") == "Application"}
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -100,6 +105,8 @@ def prepare(apps_docs, out_dir, registry, prefixes, instance_profile):
     dev_values = yaml.safe_load((ENV_DIR / "values" / "catalog-api.yaml").read_text())
     image = (dev_values.get("image") or {}).get("repository") or chart_defaults["image"]["repository"]
     dev_values.setdefault("image", {})["repository"] = rewrite(image, registry, prefixes)
+    # Live tests run private-only: an internal ALB that accepts the VPC range, never 0.0.0.0/0.
+    dev_values.setdefault("ingress", {}).update({"scheme": "internal", "inboundCidrs": [vpc_cidr]})
     (out_dir / "catalog-api.values.yaml").write_text(yaml.safe_dump(dev_values, sort_keys=True))
 
     manifests = []
@@ -109,6 +116,7 @@ def prepare(apps_docs, out_dir, registry, prefixes, instance_profile):
                 # Karpenter would create an instance profile through IAM, which has no VPC endpoint.
                 doc["spec"].pop("role", None)
                 doc["spec"]["instanceProfile"] = instance_profile
+                doc["spec"]["associatePublicIPAddress"] = False
             if doc:
                 manifests.append(doc)
     (out_dir / "karpenter.yaml").write_text(yaml.safe_dump_all(manifests, sort_keys=False))
@@ -121,11 +129,12 @@ def main(argv=None):
     parser.add_argument("--registry", required=True)
     parser.add_argument("--prefix", action="append", required=True, help="UPSTREAM=PREFIX, repeatable")
     parser.add_argument("--instance-profile", required=True)
+    parser.add_argument("--vpc-cidr", required=True)
     args = parser.parse_args(argv)
 
     prefixes = dict(item.split("=", 1) for item in args.prefix)
     docs = list(yaml.safe_load_all(args.apps_yaml.read_text()))
-    prepare(docs, args.out_dir, args.registry, prefixes, args.instance_profile)
+    prepare(docs, args.out_dir, args.registry, prefixes, args.instance_profile, args.vpc_cidr)
     print(f"live install prepared in {args.out_dir}")
     return 0
 

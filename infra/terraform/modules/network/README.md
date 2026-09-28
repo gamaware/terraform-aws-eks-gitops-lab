@@ -73,5 +73,6 @@ Tests: `tests/network.tftest.hcl` (mocked provider, runs offline with `terraform
 | nat\_gateway\_count | Number of NAT gateways created. |
 | private\_subnet\_ids | Private subnet IDs, one per AZ. Nodes and pods run here. |
 | public\_subnet\_ids | Public subnet IDs, one per AZ. Only internet-facing load balancers and NAT gateways use them; empty when private\_only is true. |
+| vpc\_cidr | IPv4 CIDR block of the VPC. |
 | vpc\_id | ID of the VPC. |
 <!-- END_TF_DOCS -->

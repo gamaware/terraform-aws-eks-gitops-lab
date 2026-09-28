@@ -188,7 +188,8 @@ done < <(jq -r '.pull_through_prefixes | to_entries[] | "\(.key) \(.value)"' <<<
 kubectl kustomize gitops/environments/dev > "$work_dir/apps.yaml"
 uv run --no-project --with-requirements tests/requirements.txt python scripts/live_install.py \
   "$work_dir/apps.yaml" "$work_dir/install" --registry "$registry" "${prefix_args[@]}" \
-  --instance-profile "$(jq -r .karpenter_instance_profile <<< "$access_json")"
+  --instance-profile "$(jq -r .karpenter_instance_profile <<< "$access_json")" \
+  --vpc-cidr "$(terraform -chdir="$env_dir" output -raw vpc_cidr)"
 
 kubectl apply -f gitops/namespaces/
 while IFS=$'\t' read -r name chart repo version namespace; do

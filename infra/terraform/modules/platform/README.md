@@ -60,5 +60,6 @@ through the environment roots (`envs/<env>/tests/`), which also check that Terra
 | nat\_gateway\_count | Number of NAT gateways. |
 | private\_access | Relay instance, pull-through cache registry and prefixes, and Karpenter instance profile; null unless private\_only is true. |
 | public\_subnet\_count | Number of public subnets; zero when private\_only is true. |
+| vpc\_cidr | IPv4 CIDR block of the VPC. |
 | vpc\_id | ID of the VPC. |
 <!-- END_TF_DOCS -->
