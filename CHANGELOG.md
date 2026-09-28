@@ -22,7 +22,10 @@ All notable changes to this project are documented in this file. The format foll
 - Manual `make test-live` for the dev environment, with guaranteed teardown.
 - CI calling the shared `gamaware/.github` reusable workflows pinned to commit
   `1255caafb08b06cc4658318c4dd48f9dea946c9e`, plus OSSF Scorecard.
-- Six architecture decision records, context and deployment diagrams, and the social preview.
+- Seven architecture decision records, context and deployment diagrams, and the social preview.
+- Private API endpoint in every environment (ADR 0007): `endpoint_public_access = false` in the `eks` module, a
+  Session Manager relay and Session Manager VPC endpoints in every environment, and `scripts/api-tunnel.sh` for
+  kubectl and the Helm provider (`kubernetes_api_url`, `install_argocd`).
 - Private-only live tests (ADR 0006): `private_only` mode with no internet path, VPC endpoints, a private API
   endpoint reached through a Session Manager relay, ECR pull-through caches, a Helm install in place of Argo CD, and a
   pre-flight (`scripts/check_private_plan.py`, `tests/test_private_live.py`) that refuses internet-facing or

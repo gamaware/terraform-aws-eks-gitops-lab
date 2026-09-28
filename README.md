@@ -15,7 +15,7 @@ for delivery, with a separate folder for each environment. Run `make verify` to 
 ## What this proves
 
 - Small Terraform modules define the VPC, EKS, managed nodes, add-ons, Karpenter prerequisites and alarms.
-  Mocked providers let all 43 `terraform test` runs check the cluster configuration without AWS or credentials.
+  Mocked providers let all 42 `terraform test` runs check the cluster configuration without AWS or credentials.
 - EKS Pod Identity binds one role to one service account for each controller, giving pods AWS access without keys
   or node roles. A hop limit of 1 and mandatory IMDSv2 on nodes prevent pods from using node credentials.
 - A Helm chart packages the application, and its schema blocks unsafe configuration: `latest` tags, privileged
@@ -32,7 +32,7 @@ for delivery, with a separate folder for each environment. Run `make verify` to 
 | --- | --- |
 | EKS cluster, access entries, add-ons, Pod Identity | [`infra/terraform/modules/eks/`](infra/terraform/modules/eks/) |
 | Karpenter IAM and interruption queue | [`infra/terraform/modules/karpenter/`](infra/terraform/modules/karpenter/) |
-| Private-only access for the live test: Session Manager relay, ECR pull-through caches | [`infra/terraform/modules/private-access/`](infra/terraform/modules/private-access/) |
+| Private API access in every environment: Session Manager relay; ECR pull-through caches for live runs | [`infra/terraform/modules/private-access/`](infra/terraform/modules/private-access/) |
 | Argo CD bootstrap (the only Kubernetes state in Terraform) | [`infra/terraform/modules/argocd-bootstrap/`](infra/terraform/modules/argocd-bootstrap/) |
 | Environment roots | [`infra/terraform/envs/dev/`](infra/terraform/envs/dev/), [`prod/`](infra/terraform/envs/prod/) |
 | Helm chart and its schema | [`charts/catalog-api/`](charts/catalog-api/), [`values.schema.json`](charts/catalog-api/values.schema.json) |
@@ -93,10 +93,10 @@ first run, it downloads the AWS and Helm providers, tflint plugins, kubeconform 
 and CRD schemas.
 
 ```text
-Success! 2 passed, 0 failed.      # terraform test, once per tested module and root: 43 runs in total
+Success! 2 passed, 0 failed.      # terraform test, once per tested module and root: 42 runs in total
 Summary: 47 resources found in 10 files - Valid: 47, Invalid: 0, Errors: 0, Skipped: 0
-68 passed, 30 subtests passed in 0.50s
-Passed checks: 276, Failed checks: 0, Skipped checks: 0      # Checkov, Terraform
+69 passed, 30 subtests passed in 1.35s
+Passed checks: 294, Failed checks: 0, Skipped checks: 0      # Checkov, Terraform
 Passed checks: 380, Failed checks: 0, Skipped checks: 0      # Checkov, rendered manifests
 verify: all checks passed
 ```
@@ -106,6 +106,11 @@ billable resources using the account associated with the `dev` AWS profile, then
 Live tests run private-only: no internet path, a private API endpoint reached through Session Manager, images
 through ECR pull-through caches, no Route 53, and a pre-flight that refuses any plan with an internet-facing resource.
 Before starting it, read [`docs/live-test.md`](docs/live-test.md).
+
+The API endpoint is private in every environment ([ADR 0007](docs/adr/0007-private-api-endpoint-in-every-environment.md)).
+From outside the VPC, apply an environment once with `-var=install_argocd=false`, run the command in its
+`api_tunnel_command` output to forward `127.0.0.1:8443` through the Session Manager relay, then apply again with
+`-var=kubernetes_api_url=https://127.0.0.1:8443` to install Argo CD. kubectl uses the same tunnel.
 
 ## Repository map
 
@@ -138,13 +143,14 @@ Architecture decision records follow the *Fundamentals of Software Architecture*
 | [0004](docs/adr/0004-plain-resources-over-community-modules.md) | Plain resources in small local modules instead of the community EKS module | Accepted |
 | [0005](docs/adr/0005-offline-verification-boundary.md) | What offline verification proves, and what only the live test proves | Accepted |
 | [0006](docs/adr/0006-live-tests-run-private-only.md) | Live tests run private-only | Accepted |
+| [0007](docs/adr/0007-private-api-endpoint-in-every-environment.md) | Private API endpoint in every environment | Accepted |
 
 ## Security and quality gates
 
 | Gate | What it catches | Where |
 | --- | --- | --- |
 | `terraform fmt`, `validate`, `tflint` | Syntax, deprecated arguments, unused declarations, invalid AWS values | `make terraform`, shared `terraform` workflow |
-| `terraform test` (mocked) | Open API endpoint, missing admins, IMDS reachable from pods, wrong Pod Identity bindings, unscoped Karpenter permissions, names that drift from `gitops/` | `make terraform` |
+| `terraform test` (mocked) | Public API endpoint, missing admins, IMDS reachable from pods, wrong Pod Identity bindings, unscoped Karpenter permissions, names that drift from `gitops/` | `make terraform` |
 | `helm lint --strict` and the values schema | Unsafe or unknown chart values | `make helm`, shared `helm` workflow |
 | `kubeconform` | Invalid manifests, including Argo CD and Karpenter custom resources | `make kubeconform` |
 | pytest render assertions | Project escapes, wrong environment paths, wave order, unpinned charts and AMIs, pod security | `make render-test` |
@@ -164,7 +170,7 @@ no cloud credentials.
 - **Out of scope:** This lab excludes cert-manager, ExternalDNS, Kyverno or Gatekeeper policies, a service mesh,
   and a separate repository for GitOps configuration.
 - **A real engagement adds:** Client work includes S3 remote state with a bootstrap stack, a CI identity for
-  planning and applying through OIDC, and a private-only API endpoint accessible through a VPN or bastion.
+  planning and applying through OIDC, and a CI runner inside the VPC for the private API endpoint.
   It also includes the client's image pipeline and domain, an upgrade runbook and a handover session.
 
 ## Related work

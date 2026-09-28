@@ -19,7 +19,7 @@ AWS-touching target is the manual `make test-live`.
 | `gitops/{projects,applications}/` | AppProjects and environment-neutral Applications |
 | `gitops/environments/<env>/` | Kustomize root of each app-of-apps, env patches, Karpenter pools, app values |
 | `tests/` | pytest render assertions on the chart and the app-of-apps |
-| `scripts/` | `install-tools.sh`, `render.sh`, `test-live.sh`, `live_install.py`, `check_private_plan.py` |
+| `scripts/` | `install-tools.sh`, `render.sh`, `api-tunnel.sh`, `test-live.sh`, `live_install.py`, `check_private_plan.py` |
 | `docs/adr/`, `docs/diagrams/` | decisions and architecture views |
 
 ## Commands
@@ -44,7 +44,9 @@ Terraform creates and `gitops/` references these; change both sides together. Th
 - Pin everything: provider constraints, chart versions, image digests, AMI aliases, action SHAs.
 - Only documentation placeholders: account `111122223333`, `example.com`, `203.0.113.0/24`.
 - Every Terraform behaviour change gets a `tftest.hcl` assertion; every chart or gitops change gets a pytest check.
-- Live tests run private-only (ADR 0006): dev with `private_only = true` has no internet path, public endpoint or
-  Route 53. Only the live path is private; the dev and prod examples keep their public ALB, NAT and endpoint
-  options. `scripts/check_private_plan.py` is a byte-identical copy shared across repos; never edit it here.
+- The API endpoint is private in every environment (ADR 0007); reach it with `scripts/api-tunnel.sh`. Never add a
+  public endpoint option.
+- Live tests run private-only (ADR 0006): dev with `private_only = true` has no internet path or Route 53. Only the
+  live path is private; the dev and prod examples keep their public ALB and NAT. `scripts/check_private_plan.py` is a
+  byte-identical copy shared across repos; never edit it here.
 - Conventional commits, feature branches, no AI attribution anywhere.

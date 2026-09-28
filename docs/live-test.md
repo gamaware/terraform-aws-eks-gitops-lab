@@ -8,14 +8,15 @@ down the dev environment in a real AWS account. CI excludes this test, and `make
 Live tests run private-only: a live run creates nothing that is reachable from the internet, nothing with a public IP
 address, and nothing in Route 53. `scripts/test-live.sh` applies `infra/terraform/envs/dev` with
 `private_only = true`, which changes the dev environment as follows. The rule covers live runs only: the dev and prod
-configurations in the repository keep their internet-facing ALB, NAT egress and optional public endpoint.
+configurations in the repository keep their internet-facing ALB and NAT egress; the API endpoint is private everywhere
+([ADR 0007](adr/0007-private-api-endpoint-in-every-environment.md)).
 
 - **No internet path.** The VPC has no internet gateway, public subnet, NAT gateway or Elastic IP, and no default
   route. Interface VPC endpoints (EC2, ECR API and Docker, EKS, EKS Auth, Elastic Load Balancing, CloudWatch Logs and
   Monitoring, SQS, STS, and the three Session Manager services) and an S3 gateway endpoint carry every AWS API call.
   They accept HTTPS from the VPC range only.
-- **Private API endpoint.** `endpoint_public_access` is `false`; `public_access_cidrs` must be empty, and the dev root
-  rejects any value. The operator reaches the endpoint through Session Manager port forwarding via a relay instance
+- **Private API endpoint.** `endpoint_public_access` is `false` in every environment. The operator reaches the
+  endpoint through Session Manager port forwarding via the relay instance every environment has
   in a private subnet: no public IP address, no inbound security group rules, HTTPS out to the VPC only. The cluster
   security group accepts the relay by security group. kubectl and Helm use `https://127.0.0.1:8443` with the
   endpoint's own host name for TLS verification.
@@ -45,10 +46,10 @@ Only the plan that passed the check is applied.
 
 ### Offline tests
 
-`make verify` runs the same rules without AWS: the `live_test_configuration_is_private_only` and
-`live_test_rejects_a_public_api_endpoint` runs in `infra/terraform/envs/dev/tests/dev.tftest.hcl`, the private-only runs
-of the `network` and `private-access` module tests, and the pytest files above, which also check the images, chart
-versions, instance profile and Karpenter settings `scripts/live_install.py` produces.
+`make verify` runs the same rules without AWS: the `live_test_configuration_is_private_only` run in
+`infra/terraform/envs/dev/tests/dev.tftest.hcl`, the `api_endpoint_is_private_only` run of the `eks` tests, the
+private-only runs of the `network` and `private-access` module tests, and the pytest files above, which also check the
+images, chart versions, instance profile and Karpenter settings `scripts/live_install.py` produces.
 
 ### How health is checked
 
@@ -96,7 +97,7 @@ until destruction succeeds.
   AppProject restrictions are verified offline only (render tests and kubeconform).
 - HTTPS through the ALB: the placeholder ACM certificate in the dev values prevents the listener; the ALB is internal in
   every live run.
-- The dev environment with `private_only = false` (NAT egress, public endpoint allow list) and prod's internet-facing
+- The dev environment with `private_only = false` (NAT egress, Argo CD through the tunnel) and prod's internet-facing
   ALB are verified offline only.
 - Prod sizing, multi-AZ NAT and upgrades.
 - This private-only path has not run against AWS yet; the first run may need endpoint or IAM adjustments.

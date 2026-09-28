@@ -11,3 +11,4 @@ Records are never deleted; a replaced decision is marked Superseded and links to
 | [0004](0004-plain-resources-over-community-modules.md) | Plain resources in small local modules instead of the community EKS module | Accepted |
 | [0005](0005-offline-verification-boundary.md) | What offline verification proves, and what only the live test proves | Accepted |
 | [0006](0006-live-tests-run-private-only.md) | Live tests run private-only | Accepted |
+| [0007](0007-private-api-endpoint-in-every-environment.md) | Private API endpoint in every environment | Accepted |
