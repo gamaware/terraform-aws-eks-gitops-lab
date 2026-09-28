@@ -38,3 +38,8 @@ styles/
 
 # Lock files are committed for the environment roots only
 infra/terraform/modules/**/.terraform.lock.hcl
+
+# Local agent tooling
+.claude-flow/
+.claude/proven-config*
+.claude/.proven-config-version
