@@ -1,6 +1,8 @@
 # 0005. What offline verification proves, and what only the live test proves
 
-Status: Accepted
+## Status
+
+Accepted
 
 ## Context
 
@@ -16,12 +18,6 @@ render assertions; Checkov and Trivy. `make test-live` is separate, manual and n
 the `dev` AWS profile, waits for Argo CD, Karpenter and the storefront, runs the chart's connection test pod and
 destroys everything on exit.
 
-## Alternatives
-
-- Terratest against a real account in CI: stronger evidence, but needs cloud credentials in pipelines and costs money
-  on every change.
-- LocalStack: does not emulate EKS well enough to be meaningful here.
-
 ## Consequences
 
 - A green badge means the documented offline checks passed, not that the stack was deployed.
@@ -35,3 +31,11 @@ destroys everything on exit.
 CI runs `make verify` plus the shared reusable workflows. `scripts/test-live.sh` asks for the account ID before
 creating anything, tags every resource `purpose=portfolio-test`, keeps the state if a destroy fails and lists any
 tagged resources left afterwards.
+
+## Notes
+
+Alternatives considered:
+
+- Terratest against a real account in CI: stronger evidence, but needs cloud credentials in pipelines and costs money
+  on every change.
+- LocalStack: does not emulate EKS well enough to be meaningful here.

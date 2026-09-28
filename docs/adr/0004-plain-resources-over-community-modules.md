@@ -1,6 +1,8 @@
 # 0004. Plain resources in small local modules instead of the community EKS module
 
-Status: Accepted
+## Status
+
+Accepted
 
 ## Context
 
@@ -14,12 +16,6 @@ Five local modules built from plain `aws_*` resources: `network`, `eks`, `karpen
 `argocd-bootstrap`, composed by `platform`. Environment roots in `envs/` only choose sizes, CIDR ranges and the
 Kubernetes version. Provider versions are pinned in the environment roots and locked for Linux and macOS.
 
-## Alternatives
-
-- Community modules: less code to own, faster to start. A client already on them keeps them; the tests here move over
-  with small changes.
-- One flat root per environment: duplicates every resource between dev and prod.
-
 ## Consequences
 
 - About 2,000 lines of module Terraform to maintain, each resource visible and reviewable.
@@ -31,3 +27,11 @@ Kubernetes version. Provider versions are pinned in the environment roots and lo
 `make terraform` runs `terraform fmt`, `validate`, `tflint` (terraform and aws rulesets) and `terraform test` in every
 module with a `tests/` folder and in both roots; the roots' tests cover the `platform` composition. Checkov and
 Trivy scan the same code with no skips.
+
+## Notes
+
+Alternatives considered:
+
+- Community modules: less code to own, faster to start. A client already on them keeps them; the tests here move over
+  with small changes.
+- One flat root per environment: duplicates every resource between dev and prod.
