@@ -38,9 +38,9 @@ def test_projects_allow_each_source_and_destination(env, gitops_docs):
         assert app["spec"]["destination"]["namespace"] in allowed, name
 
 
-def test_storefront_project_cannot_create_cluster_resources(gitops_docs):
+def test_catalog_api_project_cannot_create_cluster_resources(gitops_docs):
     for docs in gitops_docs.values():
-        project = by_kind(docs, "AppProject")["storefront"]["spec"]
+        project = by_kind(docs, "AppProject")["catalog-api"]["spec"]
         assert project["clusterResourceWhitelist"] == []
 
 
@@ -78,7 +78,7 @@ def test_sync_waves_install_controllers_first(env, gitops_docs):
     apps = by_kind(gitops_docs[env], "Application")
     controllers = max(_wave(apps[c]) for c in CONTROLLERS)
     assert _wave(apps["karpenter-nodepools"]) > controllers, "NodePools need the Karpenter CRDs"
-    assert _wave(apps["storefront"]) > _wave(apps["karpenter-nodepools"]), "the app needs nodes and the ALB webhook"
+    assert _wave(apps["catalog-api"]) > _wave(apps["karpenter-nodepools"]), "the app needs nodes and the ALB webhook"
 
 
 def test_every_application_prunes_and_self_heals(env, gitops_docs):
@@ -101,11 +101,11 @@ def test_load_balancer_controller_matches_the_vendored_iam_policy(env, gitops_do
     assert policy.is_file(), f"no vendored IAM policy for controller {version}"
 
 
-def test_storefront_namespace_enforces_restricted_pod_security(env, gitops_docs):
+def test_catalog_api_namespace_enforces_restricted_pod_security(env, gitops_docs):
     apps = by_kind(gitops_docs[env], "Application")
     assert apps["namespaces"]["spec"]["project"] == "platform", "the workload team must not own its namespace"
-    assert "syncOptions" not in apps["storefront"]["spec"]["syncPolicy"], "storefront must not create namespaces"
-    namespace = yaml.safe_load((GITOPS / "namespaces" / "storefront.yaml").read_text())
+    assert "syncOptions" not in apps["catalog-api"]["spec"]["syncPolicy"], "catalog-api must not create namespaces"
+    namespace = yaml.safe_load((GITOPS / "namespaces" / "catalog-api.yaml").read_text())
     assert namespace["metadata"]["labels"]["pod-security.kubernetes.io/enforce"] == "restricted"
 
 
@@ -145,8 +145,8 @@ def test_prod_ami_is_not_newer_than_dev():
     assert release("prod") <= release("dev"), "prod must run an AMI release dev has already run"
 
 
-def test_storefront_lands_on_the_workloads_node_pool(env, chart_docs):
-    deployment = by_kind(chart_docs[env], "Deployment")["storefront"]
+def test_catalog_api_lands_on_the_workloads_node_pool(env, chart_docs):
+    deployment = by_kind(chart_docs[env], "Deployment")["catalog-api"]
     selector = deployment["spec"]["template"]["spec"]["nodeSelector"]["karpenter.sh/nodepool"]
     node_pool = yaml.safe_load(Path(GITOPS / "environments" / env / "karpenter" / "nodepool.yaml").read_text())
     assert selector == node_pool["metadata"]["name"]

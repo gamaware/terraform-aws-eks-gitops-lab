@@ -9,4 +9,4 @@ patches:
   - path: patches/aws-load-balancer-controller.yaml
   - path: patches/karpenter.yaml
   - path: patches/karpenter-nodepools.yaml
-  - path: patches/storefront.yaml
+  - path: patches/catalog-api.yaml

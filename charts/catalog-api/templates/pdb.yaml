@@ -6,14 +6,14 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: {{ include "storefront.fullname" . }}
+  name: {{ include "catalog-api.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "storefront.labels" . | nindent 4 }}
+    {{- include "catalog-api.labels" . | nindent 4 }}
 spec:
   # Karpenter consolidation and node upgrades respect this, so they never drain every replica.
   minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
   selector:
     matchLabels:
-      {{- include "storefront.selectorLabels" . | nindent 6 }}
+      {{- include "catalog-api.selectorLabels" . | nindent 6 }}
 {{- end }}

@@ -19,7 +19,7 @@ module "platform" {
   public_access_cidrs    = var.public_access_cidrs
   admin_role_arns        = var.admin_role_arns
   alarm_emails           = var.alarm_emails
-  min_running_pods       = { storefront = 1 }
+  min_running_pods       = { "catalog-api" = 1 }
   gitops_repo_url        = var.gitops_repo_url
   gitops_target_revision = var.gitops_target_revision
 }

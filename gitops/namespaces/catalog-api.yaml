@@ -1,9 +1,9 @@
-# Owned by the platform project, so the storefront team cannot relabel its own namespace
+# Owned by the platform project, so the catalog team cannot relabel its own namespace
 # to a weaker Pod Security level.
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: storefront
+  name: catalog-api
   labels:
     pod-security.kubernetes.io/enforce: restricted
     pod-security.kubernetes.io/enforce-version: latest

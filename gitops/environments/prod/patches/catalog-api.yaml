@@ -1,10 +1,10 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: storefront
+  name: catalog-api
   namespace: argocd
 spec:
   source:
     helm:
       valueFiles:
-        - ../../gitops/environments/dev/values/storefront.yaml
+        - ../../gitops/environments/prod/values/catalog-api.yaml

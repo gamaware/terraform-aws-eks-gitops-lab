@@ -5,7 +5,7 @@ mock_provider "aws" {
 
 variables {
   cluster_name     = "harbor-goods-test"
-  min_running_pods = { storefront = 2 }
+  min_running_pods = { "catalog-api" = 2 }
 }
 
 run "every_alarm_notifies_the_encrypted_topic" {
@@ -40,12 +40,12 @@ run "missing_data_is_treated_as_failure_where_silence_means_trouble" {
   }
 
   assert {
-    condition     = aws_cloudwatch_metric_alarm.running_pods["storefront"].treat_missing_data == "breaching"
+    condition     = aws_cloudwatch_metric_alarm.running_pods["catalog-api"].treat_missing_data == "breaching"
     error_message = "A namespace with no running pods reports no data; that must alarm."
   }
 
   assert {
-    condition     = aws_cloudwatch_metric_alarm.running_pods["storefront"].threshold == 2
+    condition     = aws_cloudwatch_metric_alarm.running_pods["catalog-api"].threshold == 2
     error_message = "The running-pods threshold must come from min_running_pods."
   }
 }

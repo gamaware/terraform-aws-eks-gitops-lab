@@ -38,7 +38,7 @@ teardown() {
     # Stop the root app from recreating what is deleted below.
     kubectl -n argocd patch application root --type merge -p '{"spec":{"syncPolicy":null}}'
     # The Ingress must go while the load balancer controller still runs, or its ALB is orphaned.
-    kubectl -n argocd delete application storefront --wait --timeout=10m
+    kubectl -n argocd delete application catalog-api --wait --timeout=10m
     # Karpenter must still run to terminate the instances it launched.
     kubectl -n argocd delete application karpenter-nodepools --wait --timeout=10m
     kubectl wait --for=delete node -l karpenter.sh/nodepool --timeout=10m
@@ -112,14 +112,14 @@ for app in aws-load-balancer-controller metrics-server karpenter karpenter-nodep
   kubectl -n argocd wait "application/$app" --for=jsonpath='{.status.health.status}'=Healthy --timeout=20m
 done
 
-log "Checking that Karpenter launched a workloads node for the storefront"
-kubectl -n storefront rollout status deployment/storefront --timeout=15m
+log "Checking that Karpenter launched a workloads node for the catalog-api"
+kubectl -n catalog-api rollout status deployment/catalog-api --timeout=15m
 kubectl get nodes -l karpenter.sh/nodepool=workloads -o name | grep -q . || { echo "no Karpenter node"; exit 1; }
 
 log "Running the chart's connection test pod"
-helm template storefront charts/storefront --namespace storefront \
+helm template catalog-api charts/catalog-api --namespace catalog-api \
   --show-only templates/tests/test-connection.yaml | kubectl apply -f -
-kubectl -n storefront wait pod/storefront-test-connection \
+kubectl -n catalog-api wait pod/catalog-api-test-connection \
   --for=jsonpath='{.status.phase}'=Succeeded --timeout=5m
 
 # The dev values carry a placeholder ACM certificate, so the ALB is not expected to come up;

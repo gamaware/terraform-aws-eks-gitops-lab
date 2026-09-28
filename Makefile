@@ -9,7 +9,7 @@ TF_DIR      := infra/terraform
 TF_MODULES  := $(sort $(dir $(wildcard $(TF_DIR)/modules/*/main.tf)))
 TF_ENVS     := $(sort $(dir $(wildcard $(TF_DIR)/envs/*/main.tf)))
 TF_TESTED   := $(sort $(dir $(patsubst %/tests/,%/,$(dir $(wildcard $(TF_DIR)/*/*/tests/*.tftest.hcl)))))
-CHART       := charts/storefront
+CHART       := charts/catalog-api
 RENDERED    := build/rendered
 KUBE_VERSION := 1.35.0
 TOOLS       := $(CURDIR)/.tools/bin
@@ -61,7 +61,7 @@ tf-test: tf-validate
 ## helm: lint the chart with defaults, each ci/ file and each environment's values
 helm:
 	helm lint $(CHART) --strict
-	@for values in $(CHART)/ci/*.yaml gitops/environments/*/values/storefront.yaml; do \
+	@for values in $(CHART)/ci/*.yaml gitops/environments/*/values/catalog-api.yaml; do \
 	  echo "helm lint --values $$values"; \
 	  helm lint $(CHART) --strict --values $$values --quiet; \
 	done

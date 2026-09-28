@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema#",
-  "title": "storefront chart values",
+  "title": "catalog-api chart values",
   "type": "object",
   "additionalProperties": false,
   "required": [

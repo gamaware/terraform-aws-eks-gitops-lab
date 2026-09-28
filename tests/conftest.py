@@ -7,7 +7,7 @@ import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-CHART = ROOT / "charts" / "storefront"
+CHART = ROOT / "charts" / "catalog-api"
 GITOPS = ROOT / "gitops"
 ENVIRONMENTS = sorted(p.name for p in (GITOPS / "environments").iterdir() if p.is_dir())
 KUBE_VERSION = "1.35.0"
@@ -21,10 +21,10 @@ def helm_template(*values_files, set_values=(), check=True):
     cmd = [
         "helm",
         "template",
-        "storefront",
+        "catalog-api",
         str(CHART),
         "--namespace",
-        "storefront",
+        "catalog-api",
         "--kube-version",
         KUBE_VERSION,
         "--skip-tests",
@@ -66,5 +66,6 @@ def gitops_docs():
 @pytest.fixture(scope="session")
 def chart_docs():
     return {
-        e: _docs(helm_template(GITOPS / "environments" / e / "values" / "storefront.yaml").stdout) for e in ENVIRONMENTS
+        e: _docs(helm_template(GITOPS / "environments" / e / "values" / "catalog-api.yaml").stdout)
+        for e in ENVIRONMENTS
     }

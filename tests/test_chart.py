@@ -1,4 +1,4 @@
-"""Render assertions for charts/storefront with each environment's values.
+"""Render assertions for charts/catalog-api with each environment's values.
 
 values.schema.json and the template guards must reject unsafe values, and the rendered
 objects must keep the security and availability settings the environments rely on.
@@ -10,7 +10,7 @@ from conftest import by_kind, helm_template
 
 
 def _pod(docs):
-    return by_kind(docs, "Deployment")["storefront"]["spec"]["template"]["spec"]
+    return by_kind(docs, "Deployment")["catalog-api"]["spec"]["template"]["spec"]
 
 
 def test_image_is_pinned_by_digest(env, chart_docs):
@@ -42,28 +42,28 @@ def test_probes_and_resources_are_set(env, chart_docs):
 
 def test_prod_autoscales_and_dev_does_not(chart_docs):
     prod = chart_docs["prod"]
-    hpa = by_kind(prod, "HorizontalPodAutoscaler")["storefront"]["spec"]
+    hpa = by_kind(prod, "HorizontalPodAutoscaler")["catalog-api"]["spec"]
     assert (hpa["minReplicas"], hpa["maxReplicas"]) == (3, 12)
-    assert "replicas" not in by_kind(prod, "Deployment")["storefront"]["spec"], "the HPA must own replicas"
+    assert "replicas" not in by_kind(prod, "Deployment")["catalog-api"]["spec"], "the HPA must own replicas"
 
     dev = chart_docs["dev"]
     assert not by_kind(dev, "HorizontalPodAutoscaler")
-    assert by_kind(dev, "Deployment")["storefront"]["spec"]["replicas"] == 2
+    assert by_kind(dev, "Deployment")["catalog-api"]["spec"]["replicas"] == 2
 
 
 def test_disruption_budget_leaves_room_to_drain(env, chart_docs):
     docs = chart_docs[env]
-    pdb = by_kind(docs, "PodDisruptionBudget")["storefront"]["spec"]["minAvailable"]
+    pdb = by_kind(docs, "PodDisruptionBudget")["catalog-api"]["spec"]["minAvailable"]
     hpa = by_kind(docs, "HorizontalPodAutoscaler")
     if hpa:
-        floor = hpa["storefront"]["spec"]["minReplicas"]
+        floor = hpa["catalog-api"]["spec"]["minReplicas"]
     else:
-        floor = by_kind(docs, "Deployment")["storefront"]["spec"]["replicas"]
+        floor = by_kind(docs, "Deployment")["catalog-api"]["spec"]["replicas"]
     assert pdb < floor
 
 
 def test_ingress_is_https_only_on_an_alb(env, chart_docs):
-    ingress = by_kind(chart_docs[env], "Ingress")["storefront"]
+    ingress = by_kind(chart_docs[env], "Ingress")["catalog-api"]
     annotations = ingress["metadata"]["annotations"]
     assert ingress["spec"]["ingressClassName"] == "alb"
     assert annotations["alb.ingress.kubernetes.io/ssl-redirect"] == "443"
@@ -73,7 +73,7 @@ def test_ingress_is_https_only_on_an_alb(env, chart_docs):
 
 
 def test_network_policy_allows_dns_egress_only(env, chart_docs):
-    policy = by_kind(chart_docs[env], "NetworkPolicy")["storefront"]["spec"]
+    policy = by_kind(chart_docs[env], "NetworkPolicy")["catalog-api"]["spec"]
     assert policy["policyTypes"] == ["Ingress", "Egress"]
     ports = {p["port"] for rule in policy["egress"] for p in rule["ports"]}
     assert ports == {53}
@@ -81,7 +81,7 @@ def test_network_policy_allows_dns_egress_only(env, chart_docs):
 
 def test_every_object_is_namespaced_explicitly(env, chart_docs):
     for doc in chart_docs[env]:
-        assert doc["metadata"]["namespace"] == "storefront", doc["kind"]
+        assert doc["metadata"]["namespace"] == "catalog-api", doc["kind"]
 
 
 @pytest.mark.parametrize(

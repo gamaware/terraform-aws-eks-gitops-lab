@@ -2,15 +2,15 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "storefront.fullname" . }}
+  name: {{ include "catalog-api.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "storefront.labels" . | nindent 4 }}
+    {{- include "catalog-api.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "storefront.fullname" . }}
+    name: {{ include "catalog-api.fullname" . }}
   minReplicas: {{ .Values.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
   metrics:

@@ -63,7 +63,7 @@ jobs:
       contents: read
     uses: gamaware/.github/.github/workflows/helm.yml@1255caafb08b06cc4658318c4dd48f9dea946c9e
     with:
-      charts: '["charts/storefront"]'
+      charts: '["charts/catalog-api"]'
       kubernetes-version: "1.35.0"
 
   verify:

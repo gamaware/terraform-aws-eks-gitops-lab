@@ -70,7 +70,7 @@ repos:
         types: [shell]
       - id: helm-lint
         name: helm lint
-        entry: helm lint charts/storefront --strict
+        entry: helm lint charts/catalog-api --strict
         language: system
         files: ^(charts/|gitops/environments/.*/values/)
         pass_filenames: false

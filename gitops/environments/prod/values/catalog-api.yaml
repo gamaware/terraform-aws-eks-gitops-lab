@@ -1,7 +1,7 @@
 # Prod: the HPA scales between 3 and 12 replicas; the PDB keeps 2 up through node drains.
 ingress:
   enabled: true
-  host: shop.example.com
+  host: catalog.example.com
   certificateArn: arn:aws:acm:us-east-1:111122223333:certificate/66666666-7777-8888-9999-000000000000
   scheme: internet-facing
 

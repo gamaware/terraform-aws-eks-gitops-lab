@@ -8,4 +8,4 @@ resources:
   - metrics-server.yaml
   - karpenter.yaml
   - karpenter-nodepools.yaml
-  - storefront.yaml
+  - catalog-api.yaml

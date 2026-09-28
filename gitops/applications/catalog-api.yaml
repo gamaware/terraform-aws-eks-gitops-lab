@@ -1,10 +1,10 @@
-# The storefront chart from charts/storefront. Wave 2: the load balancer controller webhook, the
-# workloads NodePool and the storefront namespace must be ready first. Environment patches set
+# The catalog-api chart from charts/catalog-api. Wave 2: the load balancer controller webhook, the
+# workloads NodePool and the catalog-api namespace must be ready first. Environment patches set
 # the values file.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: storefront
+  name: catalog-api
   namespace: argocd
   labels:
     harbor-goods.example.com/source: this-repo
@@ -13,18 +13,18 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: storefront
+  project: catalog-api
   source:
     repoURL: https://github.com/gamaware/terraform-aws-eks-gitops-lab.git
     targetRevision: main
-    path: charts/storefront
+    path: charts/catalog-api
     helm:
-      releaseName: storefront
+      releaseName: catalog-api
       valueFiles:
-        - ../../gitops/environments/ENVIRONMENT/values/storefront.yaml
+        - ../../gitops/environments/ENVIRONMENT/values/catalog-api.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: storefront
+    namespace: catalog-api
   syncPolicy:
     automated:
       prune: true

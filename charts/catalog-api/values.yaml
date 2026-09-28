@@ -1,7 +1,7 @@
-# Defaults are safe for any environment; gitops/environments/<env>/values/storefront.yaml
+# Defaults are safe for any environment; gitops/environments/<env>/values/catalog-api.yaml
 # overrides only what differs. values.schema.json rejects unknown keys and unsafe settings.
 
-# Stand-in image for the fictional storefront: an unprivileged NGINX that listens on 8080.
+# Stand-in image for the fictional catalog API: an unprivileged NGINX that listens on 8080.
 # Pinned by digest, so the tag is informational only.
 image:
   repository: public.ecr.aws/nginx/nginx-unprivileged
@@ -40,7 +40,7 @@ service:
 
 ingress:
   enabled: false
-  host: storefront.example.com
+  host: catalog.example.com
   # ACM certificate for the host. Required when ingress.enabled is true; the ALB terminates TLS.
   certificateArn: ""
   scheme: internet-facing

@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "storefront.fullname" . }}
+  name: {{ include "catalog-api.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "storefront.labels" . | nindent 4 }}
+    {{- include "catalog-api.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
@@ -12,7 +12,7 @@ spec:
   revisionHistoryLimit: 5
   selector:
     matchLabels:
-      {{- include "storefront.selectorLabels" . | nindent 6 }}
+      {{- include "catalog-api.selectorLabels" . | nindent 6 }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -21,13 +21,13 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "storefront.selectorLabels" . | nindent 8 }}
+        {{- include "catalog-api.selectorLabels" . | nindent 8 }}
       {{- with .Values.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
-      serviceAccountName: {{ include "storefront.fullname" . }}
+      serviceAccountName: {{ include "catalog-api.fullname" . }}
       automountServiceAccountToken: false
       # A UID above 10000 cannot collide with a system user on the node. The image runs as any
       # UID: it only writes to /tmp, which fsGroup makes writable.
@@ -48,16 +48,16 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              {{- include "storefront.selectorLabels" . | nindent 14 }}
+              {{- include "catalog-api.selectorLabels" . | nindent 14 }}
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              {{- include "storefront.selectorLabels" . | nindent 14 }}
+              {{- include "catalog-api.selectorLabels" . | nindent 14 }}
       containers:
-        - name: storefront
-          image: {{ include "storefront.image" . }}
+        - name: catalog-api
+          image: {{ include "catalog-api.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http

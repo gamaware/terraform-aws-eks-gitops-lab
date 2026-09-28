@@ -1,19 +1,19 @@
-# The storefront team's project: one namespace, charts from this repository only, and no
+# The catalog team's project: one namespace, charts from this repository only, and no
 # cluster-scoped resources. The namespace itself comes from the platform project.
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: storefront
+  name: catalog-api
   namespace: argocd
   labels:
     harbor-goods.example.com/source: this-repo
 spec:
-  description: Harbor Goods storefront workloads
+  description: Harbor Goods catalog API workloads
   sourceRepos:
     - https://github.com/gamaware/terraform-aws-eks-gitops-lab.git
   destinations:
     - server: https://kubernetes.default.svc
-      namespace: storefront
+      namespace: catalog-api
   clusterResourceWhitelist: []
   namespaceResourceBlacklist:
     - group: ""

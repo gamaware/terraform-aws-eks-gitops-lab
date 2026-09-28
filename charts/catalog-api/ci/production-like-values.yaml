@@ -1,7 +1,7 @@
 # Everything on: HTTPS Ingress behind an ALB, HPA and a PDB.
 ingress:
   enabled: true
-  host: shop.example.com
+  host: catalog.example.com
   certificateArn: arn:aws:acm:us-east-1:111122223333:certificate/12345678-1234-1234-1234-123456789012
   groupName: harbor-goods
 autoscaling:

@@ -3,7 +3,7 @@ replicaCount: 2
 
 ingress:
   enabled: true
-  host: shop.dev.example.com
+  host: catalog.dev.example.com
   certificateArn: arn:aws:acm:us-east-1:111122223333:certificate/11111111-2222-3333-4444-555555555555
   scheme: internet-facing
 
