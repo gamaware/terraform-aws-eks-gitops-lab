@@ -1,0 +1,26 @@
+# NodePool and EC2NodeClass for application pods. Wave 1: the Karpenter CRDs from wave 0 must
+# exist first. Environment patches set the source path to their own karpenter/ folder.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: karpenter-nodepools
+  namespace: argocd
+  labels:
+    harbor-goods.example.com/source: this-repo
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: platform
+  source:
+    repoURL: https://github.com/gamaware/terraform-aws-eks-gitops-lab.git
+    targetRevision: main
+    path: gitops/environments/ENVIRONMENT/karpenter
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

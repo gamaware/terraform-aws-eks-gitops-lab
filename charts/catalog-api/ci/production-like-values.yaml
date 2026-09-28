@@ -1,0 +1,13 @@
+# Everything on: HTTPS Ingress behind an ALB, HPA and a PDB.
+ingress:
+  enabled: true
+  host: catalog.example.com
+  certificateArn: arn:aws:acm:us-east-1:111122223333:certificate/12345678-1234-1234-1234-123456789012
+  groupName: harbor-goods
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 12
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2

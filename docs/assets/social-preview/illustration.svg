@@ -1,0 +1,19 @@
+<rect x="24" y="56" width="680" height="476" rx="10" stroke-dasharray="8 8"/>
+  <text x="44" y="88" text-anchor="start" stroke="none" fill="#FFFFFF">vpc</text>
+  <rect x="264" y="84" width="200" height="84" rx="6"/><polygon points="310,108 330,98 350,108 350,132 330,142 310,132"/>
+  <path d="M368,116 H442" stroke-opacity=".55"/><path d="M368,134 H420" stroke-opacity=".55"/>
+  <text x="364" y="196" text-anchor="middle" stroke="none" fill="#FFFFFF">control plane</text>
+  <path d="M364,206 V222 M190,222 H538 M190,222 V250 M538,222 V250"/>
+  <rect x="56" y="250" width="268" height="224" rx="8"/><rect x="404" y="250" width="268" height="224" rx="8"/>
+  <rect x="76" y="274" width="76" height="60" rx="5"/><circle cx="94" cy="304" r="6" fill="#FFFFFF" stroke-opacity=".8"/><circle cx="114" cy="304" r="6" fill="#FFFFFF" stroke-opacity=".8"/><circle cx="134" cy="304" r="6" fill="#FFFFFF" stroke-opacity=".8"/><rect x="172" y="274" width="76" height="60" rx="5"/><circle cx="190" cy="304" r="6" fill="#FFFFFF" stroke-opacity=".8"/><circle cx="210" cy="304" r="6" fill="#FFFFFF" stroke-opacity=".8"/><circle cx="230" cy="304" r="6" stroke-opacity=".8"/><rect x="76" y="356" width="76" height="60" rx="5"/><circle cx="94" cy="386" r="6" fill="#FFFFFF" stroke-opacity=".8"/><circle cx="114" cy="386" r="6" fill="#FFFFFF" stroke-opacity=".8"/><circle cx="134" cy="386" r="6" fill="#FFFFFF" stroke-opacity=".8"/><rect x="172" y="356" width="76" height="60" rx="5"/><circle cx="190" cy="386" r="6" fill="#FFFFFF" stroke-opacity=".8"/><circle cx="210" cy="386" r="6" stroke-opacity=".8"/><circle cx="230" cy="386" r="6" stroke-opacity=".8"/>
+  <rect x="424" y="274" width="76" height="60" rx="5"/><circle cx="442" cy="304" r="6" fill="#FFFFFF" stroke-opacity=".8"/><circle cx="462" cy="304" r="6" fill="#FFFFFF" stroke-opacity=".8"/><circle cx="482" cy="304" r="6" fill="#FFFFFF" stroke-opacity=".8"/><rect x="520" y="274" width="76" height="60" rx="5"/><circle cx="538" cy="304" r="6" fill="#FFFFFF" stroke-opacity=".8"/><circle cx="558" cy="304" r="6" fill="#FFFFFF" stroke-opacity=".8"/><circle cx="578" cy="304" r="6" fill="#FFFFFF" stroke-opacity=".8"/><rect x="424" y="356" width="76" height="60" rx="5"/><circle cx="442" cy="386" r="6" fill="#FFFFFF" stroke-opacity=".8"/><circle cx="462" cy="386" r="6" fill="#FFFFFF" stroke-opacity=".8"/><circle cx="482" cy="386" r="6" stroke-opacity=".8"/><rect x="520" y="356" width="76" height="60" rx="5" stroke="#FFC34D"/><circle cx="538" cy="386" r="6" stroke-opacity=".8"/><circle cx="558" cy="386" r="6" stroke-opacity=".8"/><circle cx="578" cy="386" r="6" stroke-opacity=".8"/>
+  <text x="364" y="506" text-anchor="middle" stroke="none" fill="#FFFFFF">node groups</text>
+  <path d="M610,390 H660" stroke="#FFC34D" stroke-width="3"/>
+  <path d="M660,390 l-10,-6 v12 z" fill="#FFC34D" stroke="none"/>
+  <path d="M634,368 v14 M627,375 h14" stroke="#FFC34D" stroke-width="3"/>
+  <path d="M288,430 H318" stroke="#FFC34D" stroke-width="3"/><path d="M318,430 l-10,-6 v12 z" fill="#FFC34D" stroke="none"/>
+  <circle cx="364" cy="580" r="34"/><circle cx="364" cy="580" r="10"/>
+  <path d="M364,546 V570 M364,590 V614 M330,580 H354 M374,580 H398 M340,556 L357,573 M371,587 L388,604 M388,556 L371,573 M357,587 L340,604"/>
+  <text x="412" y="586" text-anchor="start" stroke="none" fill="#FFFFFF">helm release</text>
+  <path d="M364,546 V538" stroke-dasharray="4 7"/>
+  <path d="M364,534 l-6,10 h12 z" fill="#FFFFFF" stroke="none"/>

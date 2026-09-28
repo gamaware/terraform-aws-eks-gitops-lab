@@ -1,0 +1,24 @@
+# Prod: the HPA scales between 3 and 12 replicas; the PDB keeps 2 up through node drains.
+ingress:
+  enabled: true
+  host: catalog.example.com
+  certificateArn: arn:aws:acm:us-east-1:111122223333:certificate/66666666-7777-8888-9999-000000000000
+  scheme: internet-facing
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 12
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    memory: 512Mi

@@ -1,0 +1,104 @@
+name: ci
+
+# Thin caller. Shared checks come from gamaware/.github reusable workflows pinned by commit
+# SHA; the verify job runs the same `make verify` as a local run. Every job is offline: no AWS
+# credentials, no id-token, no secrets.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-docs:
+    name: lint-docs
+    permissions:
+      contents: read
+    uses: gamaware/.github/.github/workflows/lint-docs.yml@1e2fe2d99f7772ad59b896f332557457ebcbdde9
+
+  lint-actions:
+    name: lint-actions
+    permissions:
+      contents: read
+    uses: gamaware/.github/.github/workflows/lint-actions.yml@1e2fe2d99f7772ad59b896f332557457ebcbdde9
+
+  secrets:
+    name: secrets
+    permissions:
+      contents: read
+    uses: gamaware/.github/.github/workflows/secrets.yml@1e2fe2d99f7772ad59b896f332557457ebcbdde9
+
+  security:
+    name: security
+    permissions:
+      contents: read
+    uses: gamaware/.github/.github/workflows/security.yml@1e2fe2d99f7772ad59b896f332557457ebcbdde9
+    with:
+      trivy-severity: HIGH,CRITICAL
+      checkov-config: .checkov.yaml
+
+  terraform:
+    name: terraform
+    permissions:
+      contents: read
+    uses: gamaware/.github/.github/workflows/terraform.yml@1e2fe2d99f7772ad59b896f332557457ebcbdde9
+    with:
+      working-directories: >-
+        ["infra/terraform/modules/network", "infra/terraform/modules/eks",
+        "infra/terraform/modules/karpenter", "infra/terraform/modules/observability",
+        "infra/terraform/modules/argocd-bootstrap", "infra/terraform/modules/platform",
+        "infra/terraform/envs/dev", "infra/terraform/envs/prod"]
+      terraform-version: "1.14.5"
+      tflint-version: v0.61.0
+      run-tests: true
+
+  helm:
+    name: helm
+    permissions:
+      contents: read
+    uses: gamaware/.github/.github/workflows/helm.yml@1e2fe2d99f7772ad59b896f332557457ebcbdde9
+    with:
+      charts: '["charts/catalog-api"]'
+      kubernetes-version: "1.35.0"
+
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: "1.14.5"
+          terraform_wrapper: false
+
+      - uses: terraform-linters/setup-tflint@1cf010d3c7aef302051ccdb68c14c5dc2efa34ef # v6.3.1
+        with:
+          tflint_version: v0.61.0
+
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: v4.3.0
+
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          enable-cache: false
+
+      - uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
+        with:
+          version: v0.74.0
+
+      # The same entry point as a local run: cross-checks between Terraform, the chart and
+      # gitops/, render assertions and the rendered-manifest scans live here.
+      - name: verify
+        run: make verify

@@ -1,0 +1,41 @@
+# Secrets and credentials
+.env
+.env.local
+*.pem
+*.key
+credentials.json
+*.tfvars.json
+
+# Terraform: providers, state and plans never enter Git
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+crash.log
+*_override.tf
+*_override.tf.json
+
+# Local build output, caches and pinned tools
+build/
+.cache/
+.tools/
+.firecrawl/
+
+# Python
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.venv/
+
+# Vale styles are synced, not committed
+styles/
+
+# OS and editors
+.DS_Store
+.idea/
+.vscode/
+
+# Lock files are committed for the environment roots only
+infra/terraform/modules/**/.terraform.lock.hcl
+

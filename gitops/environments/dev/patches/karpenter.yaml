@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: karpenter
+  namespace: argocd
+spec:
+  source:
+    helm:
+      valuesObject:
+        # One replica is enough in dev; prod runs two across AZs.
+        replicas: 1
+        settings:
+          clusterName: harbor-goods-dev
+          interruptionQueue: harbor-goods-dev-karpenter

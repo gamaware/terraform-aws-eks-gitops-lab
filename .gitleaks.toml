@@ -1,0 +1,8 @@
+# Default rules, plus one path exception: the detect-secrets baseline stores SHA-1 hashes of
+# the pinned checksums and commit SHAs it has reviewed, which look like API keys to gitleaks.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "detect-secrets baseline (hashes of reviewed false positives)"
+paths = ['''^\.secrets\.baseline$''']

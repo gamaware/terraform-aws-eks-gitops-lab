@@ -1,0 +1,12 @@
+# Root of the dev app-of-apps. Terraform points the root Application at this folder; Argo CD
+# renders it with Kustomize into the AppProjects and child Applications for dev.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../projects
+  - ../../applications
+patches:
+  - path: patches/aws-load-balancer-controller.yaml
+  - path: patches/karpenter.yaml
+  - path: patches/karpenter-nodepools.yaml
+  - path: patches/catalog-api.yaml

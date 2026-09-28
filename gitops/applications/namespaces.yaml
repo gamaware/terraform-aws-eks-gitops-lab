@@ -1,0 +1,25 @@
+# Workload namespaces and their Pod Security labels, managed by the platform team.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: namespaces
+  namespace: argocd
+  labels:
+    harbor-goods.example.com/source: this-repo
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: platform
+  source:
+    repoURL: https://github.com/gamaware/terraform-aws-eks-gitops-lab.git
+    targetRevision: main
+    path: gitops/namespaces
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
