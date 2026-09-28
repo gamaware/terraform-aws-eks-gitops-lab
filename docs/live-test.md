@@ -67,6 +67,10 @@ Availability Zones, KMS keys, CloudWatch log groups and alarms.
 - AWS CLI v2 must have a `dev` profile targeting a sandbox account, with permissions to create IAM roles, EKS, EC2,
   VPC endpoint, ECR, KMS, SQS, EventBridge, SNS, CloudWatch and Session Manager resources.
 - The path must include Terraform 1.14, kubectl, Helm 4, jq, uv and the Session Manager plugin for the AWS CLI.
+- Accounts whose policies require tags on create: set `LIVE_EXTRA_TAGS` to a JSON object of string tags, for example
+  `LIVE_EXTRA_TAGS='{"CostCenter":"YOUR_COST_CENTER"}' make test-live`. The run adds them to the Terraform default
+  tags, the Karpenter EC2NodeClass, the load balancer controller's default tags and the pull-through cache repository
+  creation templates. Pass them at run time; do not commit account-specific values.
 
 ## What it does
 

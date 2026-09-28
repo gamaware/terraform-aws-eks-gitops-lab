@@ -8,7 +8,7 @@ repositories instead of their public registries, because the VPC has no internet
 
 Usage:
     live_install.py APPS_YAML OUT_DIR --registry HOST --prefix UPSTREAM=PREFIX [...] --instance-profile NAME
-                    --vpc-cidr CIDR
+                    --vpc-cidr CIDR [--tags JSON]
 
 APPS_YAML is `kubectl kustomize gitops/environments/dev`. OUT_DIR receives:
     releases.tsv                 name, chart, repository ("-" for OCI), version, namespace
@@ -17,11 +17,15 @@ APPS_YAML is `kubectl kustomize gitops/environments/dev`. OUT_DIR receives:
     karpenter.yaml               the dev NodePools and EC2NodeClass, with a pre-created instance profile and no
                                  public IP addresses
 
+--tags adds AWS tags to what the controllers create: Karpenter's nodes and the load balancer controller's load
+balancers, target groups and security groups, so they carry the same tags as the Terraform resources.
+
 The repository's dev and prod configurations stay as designed (internet-facing ALB); only the live run is
 forced private here.
 """
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -85,7 +89,8 @@ def chart_reference(source):
     return f"oci://{repo}/{source['chart']}", "-"
 
 
-def prepare(apps_docs, out_dir, registry, prefixes, instance_profile, vpc_cidr):
+def prepare(apps_docs, out_dir, registry, prefixes, instance_profile, vpc_cidr, tags=None):
+    tags = tags or {}
     apps = {d["metadata"]["name"]: d for d in apps_docs if d and d.get("kind") == "Application"}
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -96,6 +101,8 @@ def prepare(apps_docs, out_dir, registry, prefixes, instance_profile, vpc_cidr):
         values = dict((source.get("helm") or {}).get("valuesObject") or {})
         _set(values, spec["image_key"], rewrite(spec["default_image"], registry, prefixes))
         _merge(values, spec["extra"])
+        if name == "aws-load-balancer-controller" and tags:
+            values["defaultTags"] = {**values.get("defaultTags", {}), **tags}
         (out_dir / f"{name}.values.yaml").write_text(yaml.safe_dump(values, sort_keys=True))
         namespace = app["spec"]["destination"]["namespace"]
         lines.append("\t".join([name, *chart_reference(source), source["targetRevision"], namespace]))
@@ -117,6 +124,7 @@ def prepare(apps_docs, out_dir, registry, prefixes, instance_profile, vpc_cidr):
                 doc["spec"].pop("role", None)
                 doc["spec"]["instanceProfile"] = instance_profile
                 doc["spec"]["associatePublicIPAddress"] = False
+                doc["spec"]["tags"] = {**doc["spec"].get("tags", {}), **tags}
             if doc:
                 manifests.append(doc)
     (out_dir / "karpenter.yaml").write_text(yaml.safe_dump_all(manifests, sort_keys=False))
@@ -130,11 +138,12 @@ def main(argv=None):
     parser.add_argument("--prefix", action="append", required=True, help="UPSTREAM=PREFIX, repeatable")
     parser.add_argument("--instance-profile", required=True)
     parser.add_argument("--vpc-cidr", required=True)
+    parser.add_argument("--tags", type=json.loads, default={}, help="JSON object of AWS tags")
     args = parser.parse_args(argv)
 
     prefixes = dict(item.split("=", 1) for item in args.prefix)
     docs = list(yaml.safe_load_all(args.apps_yaml.read_text()))
-    prepare(docs, args.out_dir, args.registry, prefixes, args.instance_profile, args.vpc_cidr)
+    prepare(docs, args.out_dir, args.registry, prefixes, args.instance_profile, args.vpc_cidr, args.tags)
     print(f"live install prepared in {args.out_dir}")
     return 0
 

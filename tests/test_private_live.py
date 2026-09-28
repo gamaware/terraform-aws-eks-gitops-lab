@@ -117,6 +117,19 @@ def test_live_karpenter_nodes_use_a_precreated_instance_profile(live_install_dir
     assert node_class["associatePublicIPAddress"] is False
 
 
+def test_live_install_tags_what_the_controllers_create(tmp_path):
+    tags = {"purpose": "portfolio-test", "Team": "example"}
+    live_install.prepare(
+        kustomize(LIVE_ENV), tmp_path, REGISTRY, PREFIXES, "harbor-goods-dev-karpenter-node", str(DEV_VPC), tags
+    )
+    docs = list(yaml.safe_load_all((tmp_path / "karpenter.yaml").read_text()))
+    node_tags = by_kind(docs, "EC2NodeClass")["default"]["spec"]["tags"]
+    assert tags.items() <= node_tags.items()
+    assert node_tags["ManagedBy"] == "karpenter", "the dev tags stay"
+    lbc = yaml.safe_load((tmp_path / "aws-load-balancer-controller.values.yaml").read_text())
+    assert tags.items() <= lbc["defaultTags"].items()
+
+
 def test_live_karpenter_runs_in_isolated_vpc_mode(live_install_dir):
     values = yaml.safe_load((live_install_dir / "karpenter.values.yaml").read_text())
     assert values["settings"]["isolatedVPC"] is True

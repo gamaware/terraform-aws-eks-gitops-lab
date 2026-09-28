@@ -14,6 +14,11 @@
 #
 # Requirements: aws CLI v2 with the `dev` profile and the Session Manager plugin, terraform,
 # kubectl, helm, jq and uv.
+#
+# Optional: LIVE_EXTRA_TAGS, a JSON object of string tags added to everything the run creates
+# (Terraform default tags, Karpenter nodes, load balancer controller resources and pull-through
+# cache repositories), for accounts whose policies require tags on create. Pass it at run time;
+# never commit account-specific values.
 set -euo pipefail
 
 profile="dev"
@@ -27,6 +32,11 @@ applied=false
 keep_state=false
 tunnel_pid=""
 pytest=(uv run --no-project --with-requirements tests/requirements.txt python -m pytest -q)
+extra_tags="${LIVE_EXTRA_TAGS:-}"
+[ "$extra_tags" != "" ] || extra_tags='{}'
+tags_json="$(jq -cen --argjson extra "$extra_tags" \
+  'if ($extra | type) == "object" and all($extra[]; type == "string")
+   then $extra + {purpose: "portfolio-test"} else error("LIVE_EXTRA_TAGS must be a JSON object of strings") end')"
 
 log() { printf '\n==> %s\n' "$*"; }
 
@@ -35,7 +45,7 @@ set_tf_vars() {
     "-var=admin_role_arns=[\"$admin_role_arn\"]"
     "-var=private_only=true"
     "-var=public_access_cidrs=[]"
-    '-var=extra_tags={purpose="portfolio-test"}'
+    "-var=extra_tags=$tags_json"
   )
 }
 
@@ -189,7 +199,7 @@ kubectl kustomize gitops/environments/dev > "$work_dir/apps.yaml"
 uv run --no-project --with-requirements tests/requirements.txt python scripts/live_install.py \
   "$work_dir/apps.yaml" "$work_dir/install" --registry "$registry" "${prefix_args[@]}" \
   --instance-profile "$(jq -r .karpenter_instance_profile <<< "$access_json")" \
-  --vpc-cidr "$(terraform -chdir="$env_dir" output -raw vpc_cidr)"
+  --vpc-cidr "$(terraform -chdir="$env_dir" output -raw vpc_cidr)" --tags "$tags_json"
 
 kubectl apply -f gitops/namespaces/
 while IFS=$'\t' read -r name chart repo version namespace; do
