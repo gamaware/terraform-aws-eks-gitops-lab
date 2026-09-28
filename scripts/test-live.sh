@@ -3,8 +3,12 @@
 # account behind the `dev` profile, checks them, and destroys them on exit, including on
 # failure or Ctrl-C. Offline checks never call this. See docs/live-test.md.
 #
-# Requirements: aws CLI v2 with the `dev` profile, terraform, kubectl, curl, and the branch in
-# GITOPS_REVISION pushed to the GitHub repository (Argo CD reads from there, not from disk).
+# Live tests run private-only. Before anything is applied, a pre-flight refuses the run when the
+# saved plan or the dev manifests Argo CD will sync would create an internet-facing resource. The
+# EKS API endpoint is the one exception: public, limited to the operator's single /32 address.
+#
+# Requirements: aws CLI v2 with the `dev` profile, terraform, kubectl, helm, uv, curl, and the
+# branch in GITOPS_REVISION pushed to the GitHub repository (Argo CD reads from there, not from disk).
 set -euo pipefail
 
 profile="dev"
@@ -87,6 +91,16 @@ caller_arn="$(aws sts get-caller-identity --profile "$profile" --query Arn --out
 role_name="$(echo "$caller_arn" | cut -d/ -f2)"
 admin_role_arn="$(aws iam get-role --profile "$profile" --role-name "$role_name" --query Role.Arn --output text)"
 operator_cidr="$(curl -fsS https://checkip.amazonaws.com | tr -d '[:space:]')/32"
+[[ "$operator_cidr" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/32$ ]] || { echo "Unexpected operator address: $operator_cidr"; exit 1; }
+
+log "Pre-flight: live tests run private-only"
+# Argo CD deploys what is pushed, so the pre-flight must check that same content.
+git fetch --quiet origin "$revision"
+if ! git diff --quiet FETCH_HEAD -- gitops charts; then
+  echo "gitops/ or charts/ differ from origin/$revision; push them first so the pre-flight checks what Argo CD deploys."
+  exit 1
+fi
+uv run --no-project --with-requirements tests/requirements.txt python -m pytest -q tests/test_private_live.py
 
 log "Applying dev with local state in $work_dir (cluster admin: $admin_role_arn, API allowed from $operator_cidr)"
 cat > "$env_dir/backend_override.tf" <<EOF
@@ -100,8 +114,12 @@ EOF
 export AWS_PROFILE="$profile"
 terraform -chdir="$env_dir" init -input=false -reconfigure > /dev/null
 set_tf_vars
+terraform -chdir="$env_dir" plan -input=false -out="$work_dir/live.tfplan" "${tf_vars[@]}" > /dev/null
+terraform -chdir="$env_dir" show -json "$work_dir/live.tfplan" > "$work_dir/live-plan.json"
+# The endpoint allowance is 1: the operator's /32, needed because Terraform and kubectl run here.
+scripts/check_private_plan.py "$work_dir/live-plan.json" --max-endpoint-cidrs 1
 applied=true
-terraform -chdir="$env_dir" apply -auto-approve -input=false "${tf_vars[@]}"
+terraform -chdir="$env_dir" apply -input=false "$work_dir/live.tfplan"
 
 log "Checking the cluster"
 aws eks update-kubeconfig --name "$cluster" --region "$region" --profile "$profile" > /dev/null
