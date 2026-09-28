@@ -38,7 +38,6 @@ module "eks" {
   cluster_name               = local.cluster_name
   kubernetes_version         = var.kubernetes_version
   subnet_ids                 = module.network.private_subnet_ids
-  public_access_cidrs        = var.public_access_cidrs
   admin_role_arns            = var.admin_role_arns
   system_node_instance_types = var.system_node_instance_types
   system_node_count          = var.system_node_count
@@ -55,12 +54,16 @@ module "karpenter" {
   tags         = local.tags
 }
 
-# Live tests run private-only: no internet path, so the operator reaches the private API endpoint
-# through this module's Session Manager relay, and Argo CD (which syncs from GitHub) is not
-# installed. See docs/live-test.md.
+# The API endpoint is private in every environment (ADR 0007): operators and Terraform reach it
+# through this module's Session Manager relay. Private-only live runs also get ECR pull-through
+# caches, and Argo CD (which syncs from GitHub) is not installed there. See docs/live-test.md.
+moved {
+  from = module.private_access[0]
+  to   = module.private_access
+}
+
 module "private_access" {
   source = "../private-access"
-  count  = var.private_only ? 1 : 0
 
   name                      = local.cluster_name
   vpc_id                    = module.network.vpc_id
@@ -69,6 +72,7 @@ module "private_access" {
   cluster_security_group_id = module.eks.cluster_security_group_id
   node_role_names           = [module.eks.node_role_name, module.karpenter.node_role_name]
   karpenter_node_role_name  = module.karpenter.node_role_name
+  pull_through_cache        = var.private_only
   tags                      = local.tags
 }
 
@@ -79,7 +83,7 @@ moved {
 
 module "argocd" {
   source = "../argocd-bootstrap"
-  count  = var.private_only ? 0 : 1
+  count  = var.install_argocd && !var.private_only ? 1 : 0
 
   environment     = var.environment
   repo_url        = var.gitops_repo_url

@@ -44,13 +44,13 @@ output "argocd_root_path" {
 }
 
 output "private_access" {
-  description = "Relay instance, pull-through cache registry and prefixes, and Karpenter instance profile; null unless private_only is true."
-  value = var.private_only ? {
-    instance_id                = module.private_access[0].instance_id
-    registry                   = module.private_access[0].registry
-    pull_through_prefixes      = module.private_access[0].pull_through_prefixes
-    karpenter_instance_profile = module.private_access[0].karpenter_instance_profile
-  } : null
+  description = "Session Manager relay instance; pull-through cache registry, prefixes and Karpenter instance profile when private_only is true."
+  value = {
+    instance_id                = module.private_access.instance_id
+    registry                   = module.private_access.registry
+    pull_through_prefixes      = module.private_access.pull_through_prefixes
+    karpenter_instance_profile = module.private_access.karpenter_instance_profile
+  }
 }
 
 output "endpoint_public_access" {

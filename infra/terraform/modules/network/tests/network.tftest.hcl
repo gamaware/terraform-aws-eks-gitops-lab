@@ -127,17 +127,17 @@ run "private_only_has_no_internet_path" {
   }
 
   assert {
-    condition     = aws_vpc_security_group_ingress_rule.endpoints_https[0].cidr_ipv4 == var.cidr && aws_vpc_security_group_ingress_rule.endpoints_https[0].from_port == 443
+    condition     = aws_vpc_security_group_ingress_rule.endpoints_https.cidr_ipv4 == var.cidr && aws_vpc_security_group_ingress_rule.endpoints_https.from_port == 443
     error_message = "Interface endpoints accept HTTPS from the VPC only."
   }
 }
 
-run "default_mode_creates_no_endpoints" {
+run "every_vpc_gets_session_manager_endpoints" {
   command = apply
 
   assert {
-    condition     = length(aws_vpc_endpoint.interface) == 0 && length(aws_vpc_endpoint.s3) == 0
-    error_message = "Endpoints exist only in private-only mode."
+    condition     = toset(keys(aws_vpc_endpoint.interface)) == toset(["ssm", "ssmmessages", "ec2messages"]) && length(aws_vpc_endpoint.s3) == 0
+    error_message = "Every VPC gets the Session Manager endpoints for the API relay; the rest exist only in private-only mode."
   }
 }
 

@@ -42,8 +42,21 @@ run "relay_is_not_reachable_from_anywhere" {
   }
 }
 
+run "relay_only_by_default" {
+  command = apply
+
+  assert {
+    condition     = length(aws_ecr_pull_through_cache_rule.this) == 0 && length(aws_iam_role_policy.pull_through) == 0 && length(aws_iam_instance_profile.karpenter_node) == 0
+    error_message = "Pull-through caches and the Karpenter instance profile exist only in private-only runs."
+  }
+}
+
 run "nodes_pull_public_images_through_ecr" {
   command = apply
+
+  variables {
+    pull_through_cache = true
+  }
 
   assert {
     condition     = toset(values(aws_ecr_pull_through_cache_rule.this)[*].upstream_registry_url) == toset(["public.ecr.aws", "registry.k8s.io"])
@@ -56,7 +69,7 @@ run "nodes_pull_public_images_through_ecr" {
   }
 
   assert {
-    condition     = aws_iam_instance_profile.karpenter_node.role == var.karpenter_node_role_name
+    condition     = aws_iam_instance_profile.karpenter_node[0].role == var.karpenter_node_role_name
     error_message = "Karpenter nodes use a pre-created instance profile; the VPC has no IAM endpoint."
   }
 }

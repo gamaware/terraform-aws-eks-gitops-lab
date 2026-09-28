@@ -42,11 +42,11 @@ variable "private_only" {
 }
 
 variable "interface_endpoint_services" {
-  description = "AWS services reached through interface VPC endpoints when private_only is true. S3 always gets a gateway endpoint."
+  description = "AWS services reached through interface VPC endpoints when private_only is true, in addition to the Session Manager endpoints every VPC gets. S3 gets a gateway endpoint."
   type        = list(string)
   default = [
-    "ec2", "ec2messages", "ecr.api", "ecr.dkr", "eks", "eks-auth", "elasticloadbalancing",
-    "logs", "monitoring", "sqs", "ssm", "ssmmessages", "sts",
+    "ec2", "ecr.api", "ecr.dkr", "eks", "eks-auth", "elasticloadbalancing",
+    "logs", "monitoring", "sqs", "sts",
   ]
 }
 

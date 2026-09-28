@@ -35,19 +35,14 @@ variable "single_nat_gateway" {
   type        = bool
 }
 
-variable "public_access_cidrs" {
-  description = "CIDR blocks allowed to reach the public API endpoint. Empty keeps it private."
-  type        = list(string)
-  default     = []
-
-  validation {
-    condition     = !(var.private_only && length(var.public_access_cidrs) > 0)
-    error_message = "private_only keeps the API endpoint private; public_access_cidrs must be empty."
-  }
+variable "install_argocd" {
+  description = "Install Argo CD with Helm. The first apply from outside the VPC sets false: Helm can only reach the private API endpoint once the relay exists and the tunnel is open."
+  type        = bool
+  default     = true
 }
 
 variable "private_only" {
-  description = "No internet path and no public API endpoint: VPC endpoints, a Session Manager relay and ECR pull-through caches instead, and no Argo CD. The live test sets it."
+  description = "No internet path: VPC endpoints and ECR pull-through caches instead, and no Argo CD. The live test sets it."
   type        = bool
   default     = false
 }

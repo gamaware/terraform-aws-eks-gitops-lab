@@ -1,16 +1,16 @@
-# VPC endpoints for a private-only VPC. Nodes pull images from ECR (including pull-through
-# cache repositories) and call EC2, STS, CloudWatch, SQS and EKS without an internet path.
-# Session Manager (ssm, ssmmessages, ec2messages) carries the operator's port forwarding.
+# VPC endpoints. Every VPC gets the Session Manager endpoints (ssm, ssmmessages, ec2messages),
+# which carry the operator's port forwarding to the private API endpoint. A private-only VPC
+# also gets the endpoints nodes need without an internet path: ECR (including pull-through
+# cache repositories), EC2, STS, CloudWatch, SQS, EKS and S3.
 
 data "aws_region" "current" {}
 
 locals {
-  interface_endpoints = var.private_only ? toset(var.interface_endpoint_services) : toset([])
+  session_manager_services = ["ssm", "ssmmessages", "ec2messages"]
+  interface_endpoints      = toset(var.private_only ? concat(var.interface_endpoint_services, local.session_manager_services) : local.session_manager_services)
 }
 
 resource "aws_security_group" "endpoints" {
-  count = var.private_only ? 1 : 0
-
   name        = "${var.name}-vpc-endpoints"
   description = "HTTPS from inside the VPC to interface endpoints"
   vpc_id      = aws_vpc.this.id
@@ -19,9 +19,7 @@ resource "aws_security_group" "endpoints" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "endpoints_https" {
-  count = var.private_only ? 1 : 0
-
-  security_group_id = aws_security_group.endpoints[0].id
+  security_group_id = aws_security_group.endpoints.id
   description       = "HTTPS from the VPC"
   cidr_ipv4         = var.cidr
   ip_protocol       = "tcp"
@@ -36,7 +34,7 @@ resource "aws_vpc_endpoint" "interface" {
   service_name        = "com.amazonaws.${data.aws_region.current.region}.${each.value}"
   vpc_endpoint_type   = "Interface"
   subnet_ids          = aws_subnet.private[*].id
-  security_group_ids  = [aws_security_group.endpoints[0].id]
+  security_group_ids  = [aws_security_group.endpoints.id]
   private_dns_enabled = true
 
   tags = merge(var.tags, { Name = "${var.name}-${each.value}" })

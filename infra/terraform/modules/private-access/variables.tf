@@ -33,6 +33,12 @@ variable "karpenter_node_role_name" {
   type        = string
 }
 
+variable "pull_through_cache" {
+  description = "Create ECR pull-through caches, the node permissions to fill them and the Karpenter instance profile. Only a VPC without internet path needs them; the private-only live run sets true."
+  type        = bool
+  default     = false
+}
+
 variable "instance_type" {
   description = "Instance type of the access instance. It only relays Session Manager port forwarding."
   type        = string

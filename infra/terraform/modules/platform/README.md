@@ -36,11 +36,11 @@ through the environment roots (`envs/<env>/tests/`), which also check that Terra
 | system\_node\_count | Size of the managed system node group. | ```object({ min = number max = number desired = number })``` | n/a | yes |
 | alarm\_emails | Email addresses subscribed to alarms. | `list(string)` | `[]` | no |
 | gitops\_target\_revision | Branch, tag or commit Argo CD tracks. | `string` | `"main"` | no |
+| install\_argocd | Install Argo CD with Helm. The first apply from outside the VPC sets false: Helm can only reach the private API endpoint once the relay exists and the tunnel is open. | `bool` | `true` | no |
 | log\_retention\_days | Retention of every platform log group, in days. | `number` | `365` | no |
 | min\_running\_pods | Minimum running pods per namespace before an alarm fires. | `map(number)` | `{}` | no |
 | name | Workload name. The cluster is named after it plus the environment, for example harbor-goods-dev. | `string` | `"harbor-goods"` | no |
-| private\_only | No internet path and no public API endpoint: VPC endpoints, a Session Manager relay and ECR pull-through caches instead, and no Argo CD. The live test sets it. | `bool` | `false` | no |
-| public\_access\_cidrs | CIDR blocks allowed to reach the public API endpoint. Empty keeps it private. | `list(string)` | `[]` | no |
+| private\_only | No internet path: VPC endpoints and ECR pull-through caches instead, and no Argo CD. The live test sets it. | `bool` | `false` | no |
 | system\_node\_instance\_types | Instance types of the managed system node group. | `list(string)` | ```[ "m7i.large" ]``` | no |
 | tags | Tags added to every resource on top of the provider default tags. | `map(string)` | `{}` | no |
 | vpc\_cidr | IPv4 CIDR block of the VPC. | `string` | `"10.0.0.0/16"` | no |
@@ -58,7 +58,7 @@ through the environment roots (`envs/<env>/tests/`), which also check that Terra
 | karpenter\_interruption\_queue\_name | Queue name referenced by the Karpenter Application patch in the environment folder under gitops/environments. |
 | karpenter\_node\_role\_name | Role name referenced by the EC2NodeClass in the environment folder under gitops/environments. |
 | nat\_gateway\_count | Number of NAT gateways. |
-| private\_access | Relay instance, pull-through cache registry and prefixes, and Karpenter instance profile; null unless private\_only is true. |
+| private\_access | Session Manager relay instance; pull-through cache registry, prefixes and Karpenter instance profile when private\_only is true. |
 | public\_subnet\_count | Number of public subnets; zero when private\_only is true. |
 | vpc\_cidr | IPv4 CIDR block of the VPC. |
 | vpc\_id | ID of the VPC. |

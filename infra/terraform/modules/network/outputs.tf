@@ -24,6 +24,6 @@ output "nat_gateway_count" {
 }
 
 output "interface_endpoint_services" {
-  description = "Services reached through interface VPC endpoints; empty unless private_only is true."
+  description = "Services reached through interface VPC endpoints: Session Manager always, the rest when private_only is true."
   value       = sort(keys(aws_vpc_endpoint.interface))
 }

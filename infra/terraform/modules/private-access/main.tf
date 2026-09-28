@@ -1,7 +1,8 @@
-# Private access for a cluster with no public API endpoint and no internet path, used by the
-# live test:
-#   - an instance with no public IP and no inbound rules; the operator reaches the private API
-#     endpoint through Session Manager port forwarding over the VPC endpoints;
+# Private access to a cluster whose API endpoint is private in every environment:
+#   - a relay instance with no public IP and no inbound rules; operators and Terraform reach
+#     the private API endpoint through Session Manager port forwarding over the VPC endpoints
+#     (scripts/api-tunnel.sh);
+# and, when pull_through_cache is true (private-only live runs, no internet path):
 #   - ECR pull-through cache rules, so nodes pull public images through ECR instead of the
 #     internet;
 #   - the Karpenter node instance profile, because Karpenter cannot reach IAM from the VPC.
@@ -22,10 +23,10 @@ locals {
   region    = data.aws_region.current.region
 
   # Upstream registries the cluster pulls from, keyed by the ECR repository prefix.
-  pull_through = {
+  pull_through = var.pull_through_cache ? {
     "${var.name}-ecr-public" = "public.ecr.aws"
     "${var.name}-k8s"        = "registry.k8s.io"
-  }
+  } : {}
 }
 
 data "aws_iam_policy_document" "access_assume" {
@@ -145,7 +146,7 @@ data "aws_iam_policy_document" "pull_through" {
 }
 
 resource "aws_iam_role_policy" "pull_through" {
-  for_each = toset(var.node_role_names)
+  for_each = var.pull_through_cache ? toset(var.node_role_names) : toset([])
 
   name   = "ecr-pull-through-cache"
   role   = each.value
@@ -153,6 +154,8 @@ resource "aws_iam_role_policy" "pull_through" {
 }
 
 resource "aws_iam_instance_profile" "karpenter_node" {
+  count = var.pull_through_cache ? 1 : 0
+
   name = var.karpenter_node_role_name
   role = var.karpenter_node_role_name
 

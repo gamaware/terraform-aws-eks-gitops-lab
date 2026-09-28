@@ -1,9 +1,10 @@
 # private-access
 
-Private access for the private-only live test (ADR 0006): a Session Manager relay instance with no public IP and no
-inbound rules for port forwarding to the private API endpoint, an HTTPS rule on the cluster security group for that
-relay, ECR pull-through cache rules for `public.ecr.aws` and `registry.k8s.io` with the node permissions to fill them,
-and the Karpenter node instance profile (a VPC without internet has no IAM endpoint).
+Private access to the API endpoint, which is private in every environment (ADR 0007): a Session Manager relay instance
+with no public IP and no inbound rules for port forwarding (`scripts/api-tunnel.sh`), and an HTTPS rule on the cluster
+security group for that relay. With `pull_through_cache = true` (the private-only live test, ADR 0006) it also creates
+ECR pull-through cache rules for `public.ecr.aws` and `registry.k8s.io` with the node permissions to fill them, and the
+Karpenter node instance profile (a VPC without internet has no IAM endpoint).
 
 Tests: `tests/private_access.tftest.hcl` (mocked provider, runs offline with `terraform test`).
 
@@ -56,6 +57,7 @@ Tests: `tests/private_access.tftest.hcl` (mocked provider, runs offline with `te
 | vpc\_cidr | IPv4 CIDR of the VPC. The access instance may only open HTTPS connections inside it. | `string` | n/a | yes |
 | vpc\_id | VPC of the cluster. | `string` | n/a | yes |
 | instance\_type | Instance type of the access instance. It only relays Session Manager port forwarding. | `string` | `"t4g.nano"` | no |
+| pull\_through\_cache | Create ECR pull-through caches, the node permissions to fill them and the Karpenter instance profile. Only a VPC without internet path needs them; the private-only live run sets true. | `bool` | `false` | no |
 | tags | Tags added to every resource. | `map(string)` | `{}` | no |
 
 ## Outputs
@@ -63,7 +65,7 @@ Tests: `tests/private_access.tftest.hcl` (mocked provider, runs offline with `te
 | Name | Description |
 | ---- | ----------- |
 | instance\_id | Instance ID of the Session Manager relay for port forwarding to the private API endpoint. |
-| karpenter\_instance\_profile | Instance profile to set as spec.instanceProfile in the live EC2NodeClass. |
+| karpenter\_instance\_profile | Instance profile to set as spec.instanceProfile in the live EC2NodeClass; null unless pull\_through\_cache is true. |
 | pull\_through\_prefixes | Upstream registry to ECR repository prefix. |
-| registry | ECR registry host that serves the pull-through cache repositories. |
+| registry | ECR registry host that serves the pull-through cache repositories; null unless pull\_through\_cache is true. |
 <!-- END_TF_DOCS -->

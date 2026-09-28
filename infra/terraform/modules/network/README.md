@@ -59,7 +59,7 @@ Tests: `tests/network.tftest.hcl` (mocked provider, runs offline with `terraform
 | kms\_key\_arn | KMS key ARN that encrypts the flow log group. | `string` | n/a | yes |
 | name | Name prefix for every network resource. | `string` | n/a | yes |
 | cidr | IPv4 CIDR block of the VPC. A /16 leaves room for three /19 private subnets. | `string` | `"10.0.0.0/16"` | no |
-| interface\_endpoint\_services | AWS services reached through interface VPC endpoints when private\_only is true. S3 always gets a gateway endpoint. | `list(string)` | ```[ "ec2", "ec2messages", "ecr.api", "ecr.dkr", "eks", "eks-auth", "elasticloadbalancing", "logs", "monitoring", "sqs", "ssm", "ssmmessages", "sts" ]``` | no |
+| interface\_endpoint\_services | AWS services reached through interface VPC endpoints when private\_only is true, in addition to the Session Manager endpoints every VPC gets. S3 gets a gateway endpoint. | `list(string)` | ```[ "ec2", "ecr.api", "ecr.dkr", "eks", "eks-auth", "elasticloadbalancing", "logs", "monitoring", "sqs", "sts" ]``` | no |
 | log\_retention\_days | Retention of the VPC flow log group, in days. | `number` | `365` | no |
 | private\_only | Build the VPC with no internet path (no internet gateway, public subnets, NAT or Elastic IP) and reach AWS APIs through VPC endpoints. The live test sets it. | `bool` | `false` | no |
 | single\_nat\_gateway | Use one NAT gateway for all AZs (cheaper, one AZ is a single point of failure) instead of one per AZ. | `bool` | `false` | no |
@@ -69,7 +69,7 @@ Tests: `tests/network.tftest.hcl` (mocked provider, runs offline with `terraform
 
 | Name | Description |
 | ---- | ----------- |
-| interface\_endpoint\_services | Services reached through interface VPC endpoints; empty unless private\_only is true. |
+| interface\_endpoint\_services | Services reached through interface VPC endpoints: Session Manager always, the rest when private\_only is true. |
 | nat\_gateway\_count | Number of NAT gateways created. |
 | private\_subnet\_ids | Private subnet IDs, one per AZ. Nodes and pods run here. |
 | public\_subnet\_ids | Public subnet IDs, one per AZ. Only internet-facing load balancers and NAT gateways use them; empty when private\_only is true. |
