@@ -3,6 +3,35 @@
 Run `make test-live` to invoke [`scripts/test-live.sh`](../scripts/test-live.sh), which provisions, checks and tears
 down the dev environment in a real AWS account. CI excludes this test, and `make verify` has no dependency on it.
 
+## Live tests run private-only
+
+A live run must never create a resource that accepts traffic from the internet. The dev configuration and a
+pre-flight enforce it:
+
+- The `catalog-api` Ingress in `gitops/environments/dev/values/catalog-api.yaml` uses an internal ALB
+  (`scheme: internal`) whose security group accepts only the dev VPC range `10.10.0.0/16` (`inboundCidrs`), so no
+  `0.0.0.0/0` or `::/0` ingress rule is created.
+- Nodes never get public IP addresses: private subnets set `map_public_ip_on_launch = false`, the system launch
+  template has no network interface override, and both EC2NodeClasses set `associatePublicIPAddress: false`.
+- The EKS API endpoint stays public, limited to the operator's single `/32` address. A private-only endpoint would
+  break the run: Terraform's Helm provider installs Argo CD and kubectl runs the checks from the operator's machine,
+  which has no route into the VPC. An empty allow list is not an option either, because EKS treats an enabled public
+  endpoint with no CIDRs as open to `0.0.0.0/0`.
+- The internet gateway, the NAT gateway and its Elastic IP stay: they are egress-only, and nodes need them to pull
+  images and let Argo CD read GitHub.
+
+The same rules run offline in `make verify`: `tests/test_private_live.py` checks the dev manifests and the plan
+checker, and the `network` and `eks` Terraform tests check subnets and launch templates. Before it applies anything,
+`scripts/test-live.sh` refuses to continue unless:
+
+1. The local `gitops/` and `charts/` match the pushed `GITOPS_REVISION`, so the checks cover what Argo CD deploys.
+2. `tests/test_private_live.py` passes.
+3. [`scripts/check_private_plan.py`](../scripts/check_private_plan.py) finds no internet-facing resource in the saved
+   plan: no internet-facing load balancer, no `0.0.0.0/0` or `::/0` security group ingress, no public IP on instances,
+   launch templates or subnets, no Elastic IP beyond one per NAT gateway, and an API endpoint limited to one `/32`.
+
+Only the plan that passed the check is applied.
+
 ## What it costs
 
 Start a run only deliberately: it provisions billable resources for roughly 40 to 60 minutes, including an EKS control
@@ -13,7 +42,7 @@ and alarms.
 
 - AWS CLI v2 must have a `dev` profile targeting a sandbox account, with permissions to create IAM roles, EKS, EC2,
   KMS, SQS, EventBridge, SNS and CloudWatch resources.
-- The path must include Terraform 1.14, kubectl, Helm 4 and curl.
+- The path must include Terraform 1.14, kubectl, Helm 4, uv and curl.
 - The test branch must already exist on GitHub because Argo CD reads that repository and does not read local files.
   Set `GITOPS_REVISION=<branch>` when testing a branch other than `main`.
 
@@ -22,8 +51,8 @@ and alarms.
 1. Displays `aws sts get-caller-identity --profile dev`, then pauses until the operator types back the account ID.
 2. Replaces the `terraform.tfvars` placeholders with the operator's current role as sole cluster admin and public IP
    (`/32`) as the sole address permitted to access the API endpoint.
-3. Applies `infra/terraform/envs/dev`, storing local state in a temporary directory and assigning every resource the
-   default `purpose=portfolio-test` tag.
+3. Runs the private-only pre-flight above, then applies the checked plan of `infra/terraform/envs/dev`, storing local
+   state in a temporary directory and assigning every resource the default `purpose=portfolio-test` tag.
 4. Waits first for system nodes and then for the `aws-load-balancer-controller`, `metrics-server`, `karpenter` and
    `karpenter-nodepools` Applications to reach `Healthy`.
 5. Waits for the `catalog-api` Deployment before confirming that Karpenter launched a `workloads` node and executing the
@@ -38,10 +67,10 @@ until destruction succeeds.
 
 ## What it does not prove
 
-- Public HTTPS remains untested because the placeholder ACM certificate in the dev values prevents creation of the
-  ALB listener. To test this path, request a certificate for a domain under your control, configure `ingress.host` and
-  `ingress.certificateArn` in `gitops/environments/dev/values/catalog-api.yaml` on a branch, then run the test with
-  `GITOPS_REVISION` pointing to that branch.
+- HTTPS through the ALB remains untested because the placeholder ACM certificate in the dev values prevents creation
+  of the ALB listener. With a real certificate on a branch, the ALB is still internal and reachable only from inside
+  the VPC; an internet-facing ALB is never part of a live run.
+- Prod's internet-facing ALB is checked offline only.
 - Applying dev alone leaves prod sizing, multi-AZ NAT and upgrades unverified.
 
 ## Output

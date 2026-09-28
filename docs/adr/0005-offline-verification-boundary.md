@@ -39,3 +39,9 @@ Alternatives considered:
 - Terratest against a real account in CI: stronger evidence, but needs cloud credentials in pipelines and costs money
   on every change.
 - LocalStack: does not emulate EKS well enough to be meaningful here.
+
+Live tests run private-only. The live test deploys dev with an internal ALB limited to the VPC range, nodes without
+public IP addresses and no `0.0.0.0/0` or `::/0` security group ingress. `scripts/test-live.sh` refuses to apply
+unless `tests/test_private_live.py` passes and `scripts/check_private_plan.py` finds no internet-facing resource in
+the saved plan. The EKS API endpoint is the one public surface, limited to the operator's `/32`, because Terraform's
+Helm provider and kubectl run from the operator's machine. The internet-facing prod ALB is verified offline only.

@@ -93,7 +93,7 @@ and CRD schemas.
 ```text
 Success! 2 passed, 0 failed.      # terraform test, once per tested module and root: 37 runs in total
 Summary: 47 resources found in 10 files - Valid: 47, Invalid: 0, Errors: 0, Skipped: 0
-50 passed in 0.34s
+71 passed in 0.46s
 Passed checks: 235, Failed checks: 0, Skipped checks: 0      # Checkov, Terraform
 Passed checks: 380, Failed checks: 0, Skipped checks: 0      # Checkov, rendered manifests
 verify: all checks passed
@@ -101,7 +101,8 @@ verify: all checks passed
 
 Run `make help` to see each target. The separate `make test-live` target requires a manual run and provisions
 billable resources using the account associated with the `dev` AWS profile, then destroys those resources on exit.
-Before starting it, read [`docs/live-test.md`](docs/live-test.md).
+Live tests run private-only: a pre-flight refuses to apply a plan or manifests that would create internet-facing
+resources. Before starting it, read [`docs/live-test.md`](docs/live-test.md).
 
 ## Repository map
 
