@@ -1,6 +1,6 @@
 # Every target except test-live runs offline: no AWS account, no credentials, no cluster.
 # Terraform providers, Helm charts' schemas and scanner rules are downloaded on first use.
-# CI calls these same targets, so a green local run means a green pipeline.
+# CI runs `make verify`; the shared lint, secret and security checks it also runs are listed in the README.
 
 SHELL := bash
 .SHELLFLAGS := -euo pipefail -c
@@ -28,7 +28,7 @@ KUBECONFORM := $(TOOLS)/kubeconform -strict -summary -kubernetes-version $(KUBE_
 
 ## verify: every offline check, in the order CI runs them
 verify: terraform helm kubeconform render-test checkov trivy
-	@echo "make verify: all offline checks passed"
+	@echo "verify: all checks passed"
 
 ## tools: install the pinned kubeconform into .tools/bin
 tools:
