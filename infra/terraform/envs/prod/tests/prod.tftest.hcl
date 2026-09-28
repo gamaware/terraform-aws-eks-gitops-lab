@@ -8,8 +8,7 @@ mock_provider "aws" {
 mock_provider "helm" {}
 
 variables {
-  admin_role_arns     = ["arn:aws:iam::111122223333:role/HarborGoodsPlatformAdmin"]
-  public_access_cidrs = ["203.0.113.10/32"]
+  admin_role_arns = ["arn:aws:iam::111122223333:role/HarborGoodsPlatformAdmin"]
 }
 
 run "terraform_and_gitops_agree_on_names" {

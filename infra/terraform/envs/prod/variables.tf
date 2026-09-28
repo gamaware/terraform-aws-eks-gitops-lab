@@ -9,10 +9,16 @@ variable "admin_role_arns" {
   type        = list(string)
 }
 
-variable "public_access_cidrs" {
-  description = "CIDR blocks allowed to reach the public API endpoint. Empty keeps it private."
-  type        = list(string)
-  default     = []
+variable "kubernetes_api_url" {
+  description = "Local end of the Session Manager port forward to the private API endpoint (scripts/api-tunnel.sh), for example https://127.0.0.1:8443. Null when Terraform runs inside the VPC."
+  type        = string
+  default     = null
+}
+
+variable "install_argocd" {
+  description = "Install Argo CD. Set false on the first apply from outside the VPC; the relay must exist before the tunnel can open."
+  type        = bool
+  default     = true
 }
 
 variable "gitops_repo_url" {

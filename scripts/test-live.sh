@@ -44,7 +44,6 @@ set_tf_vars() {
   tf_vars=(
     "-var=admin_role_arns=[\"$admin_role_arn\"]"
     "-var=private_only=true"
-    "-var=public_access_cidrs=[]"
     "-var=extra_tags=$tags_json"
   )
 }

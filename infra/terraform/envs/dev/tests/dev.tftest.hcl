@@ -8,8 +8,7 @@ mock_provider "aws" {
 mock_provider "helm" {}
 
 variables {
-  admin_role_arns     = ["arn:aws:iam::111122223333:role/HarborGoodsPlatformAdmin"]
-  public_access_cidrs = ["203.0.113.10/32"]
+  admin_role_arns = ["arn:aws:iam::111122223333:role/HarborGoodsPlatformAdmin"]
 }
 
 run "terraform_and_gitops_agree_on_names" {
@@ -66,8 +65,7 @@ run "live_test_configuration_is_private_only" {
   command = apply
 
   variables {
-    private_only        = true
-    public_access_cidrs = []
+    private_only = true
   }
 
   assert {
@@ -81,18 +79,21 @@ run "live_test_configuration_is_private_only" {
   }
 
   assert {
-    condition     = module.platform.private_access != null && module.platform.argocd_root_path == null
-    error_message = "The live run reaches the cluster through the Session Manager relay and installs no Argo CD."
+    condition     = module.platform.private_access.registry != null && module.platform.argocd_root_path == null
+    error_message = "The live run pulls images through ECR pull-through caches and installs no Argo CD."
   }
 }
 
-run "live_test_rejects_a_public_api_endpoint" {
-  command = plan
+run "api_is_reached_through_the_relay" {
+  command = apply
 
-  variables {
-    private_only        = true
-    public_access_cidrs = ["203.0.113.10/32"]
+  assert {
+    condition     = module.platform.endpoint_public_access == false && module.platform.private_access.instance_id != null
+    error_message = "The API endpoint is private; operators reach it through the Session Manager relay."
   }
 
-  expect_failures = [var.public_access_cidrs]
+  assert {
+    condition     = module.platform.private_access.registry == null
+    error_message = "Pull-through caches exist only in private-only runs."
+  }
 }

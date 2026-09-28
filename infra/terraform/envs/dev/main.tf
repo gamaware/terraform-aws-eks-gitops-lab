@@ -17,7 +17,7 @@ module "platform" {
     desired = 2
   }
 
-  public_access_cidrs    = var.public_access_cidrs
+  install_argocd         = var.install_argocd
   admin_role_arns        = var.admin_role_arns
   alarm_emails           = var.alarm_emails
   min_running_pods       = { "catalog-api" = 1 }

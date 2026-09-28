@@ -13,7 +13,7 @@ output "alarm_topic_arn" {
   value       = module.platform.alarm_topic_arn
 }
 
-output "kubeconfig_command" {
-  description = "Command that writes a kubeconfig entry for this cluster."
-  value       = "aws eks update-kubeconfig --name ${module.platform.cluster_name} --region ${var.region}"
+output "api_tunnel_command" {
+  description = "Command that opens Session Manager port forwarding to the private API endpoint and writes a kubeconfig that uses it."
+  value       = "scripts/api-tunnel.sh ${var.region} ${module.platform.cluster_name} ${module.platform.private_access.instance_id} ${module.platform.cluster_endpoint}"
 }

@@ -9,19 +9,20 @@ variable "admin_role_arns" {
   type        = list(string)
 }
 
-variable "public_access_cidrs" {
-  description = "CIDR blocks allowed to reach the public API endpoint. Empty keeps it private."
-  type        = list(string)
-  default     = []
+variable "kubernetes_api_url" {
+  description = "Local end of the Session Manager port forward to the private API endpoint (scripts/api-tunnel.sh), for example https://127.0.0.1:8443. Null when Terraform runs inside the VPC."
+  type        = string
+  default     = null
+}
 
-  validation {
-    condition     = !(var.private_only && length(var.public_access_cidrs) > 0)
-    error_message = "Live tests run private-only: public_access_cidrs must be empty when private_only is true."
-  }
+variable "install_argocd" {
+  description = "Install Argo CD. Set false on the first apply from outside the VPC; the relay must exist before the tunnel can open."
+  type        = bool
+  default     = true
 }
 
 variable "private_only" {
-  description = "Live tests run private-only: scripts/test-live.sh sets true. No internet path, no public API endpoint, no Argo CD."
+  description = "Live tests run private-only: scripts/test-live.sh sets true. No internet path and no Argo CD."
   type        = bool
   default     = false
 }

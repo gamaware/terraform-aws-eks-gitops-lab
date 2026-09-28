@@ -14,7 +14,10 @@ provider "aws" {
 # Short-lived token from the AWS CLI at every run; no kubeconfig or static credentials.
 provider "helm" {
   kubernetes = {
-    host                   = module.platform.cluster_endpoint
+    # The endpoint is private: from outside the VPC, Helm connects through the Session Manager
+    # tunnel and still verifies the certificate against the real endpoint host name.
+    host                   = coalesce(var.kubernetes_api_url, module.platform.cluster_endpoint)
+    tls_server_name        = trimprefix(module.platform.cluster_endpoint, "https://")
     cluster_ca_certificate = base64decode(module.platform.cluster_certificate_authority_data)
     exec = {
       api_version = "client.authentication.k8s.io/v1beta1"
