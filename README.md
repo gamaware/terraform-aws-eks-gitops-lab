@@ -15,7 +15,7 @@ for delivery, with a separate folder for each environment. Run `make verify` to 
 ## What this proves
 
 - Small Terraform modules define the VPC, EKS, managed nodes, add-ons, Karpenter prerequisites and alarms.
-  Mocked providers let all 37 `terraform test` runs check the cluster configuration without AWS or credentials.
+  Mocked providers let all 43 `terraform test` runs check the cluster configuration without AWS or credentials.
 - EKS Pod Identity binds one role to one service account for each controller, giving pods AWS access without keys
   or node roles. A hop limit of 1 and mandatory IMDSv2 on nodes prevent pods from using node credentials.
 - A Helm chart packages the application, and its schema blocks unsafe configuration: `latest` tags, privileged
@@ -32,12 +32,14 @@ for delivery, with a separate folder for each environment. Run `make verify` to 
 | --- | --- |
 | EKS cluster, access entries, add-ons, Pod Identity | [`infra/terraform/modules/eks/`](infra/terraform/modules/eks/) |
 | Karpenter IAM and interruption queue | [`infra/terraform/modules/karpenter/`](infra/terraform/modules/karpenter/) |
+| Private-only access for the live test: Session Manager relay, ECR pull-through caches | [`infra/terraform/modules/private-access/`](infra/terraform/modules/private-access/) |
 | Argo CD bootstrap (the only Kubernetes state in Terraform) | [`infra/terraform/modules/argocd-bootstrap/`](infra/terraform/modules/argocd-bootstrap/) |
 | Environment roots | [`infra/terraform/envs/dev/`](infra/terraform/envs/dev/), [`prod/`](infra/terraform/envs/prod/) |
 | Helm chart and its schema | [`charts/catalog-api/`](charts/catalog-api/), [`values.schema.json`](charts/catalog-api/values.schema.json) |
 | App-of-apps per environment | [`gitops/environments/`](gitops/environments/) |
 | Render assertions | [`tests/test_gitops.py`](tests/test_gitops.py), [`tests/test_chart.py`](tests/test_chart.py) |
-| Live test with teardown | [`scripts/test-live.sh`](scripts/test-live.sh), [`docs/live-test.md`](docs/live-test.md) |
+| Live test with teardown, private-only | [`scripts/test-live.sh`](scripts/test-live.sh), [`docs/live-test.md`](docs/live-test.md) |
+| Live-test pre-flight | [`scripts/check_private_plan.py`](scripts/check_private_plan.py), [`tests/test_private_live.py`](tests/test_private_live.py) |
 
 ## Scenario and acceptance criteria
 
@@ -91,24 +93,25 @@ first run, it downloads the AWS and Helm providers, tflint plugins, kubeconform 
 and CRD schemas.
 
 ```text
-Success! 2 passed, 0 failed.      # terraform test, once per tested module and root: 37 runs in total
+Success! 2 passed, 0 failed.      # terraform test, once per tested module and root: 43 runs in total
 Summary: 47 resources found in 10 files - Valid: 47, Invalid: 0, Errors: 0, Skipped: 0
-72 passed in 0.54s
-Passed checks: 235, Failed checks: 0, Skipped checks: 0      # Checkov, Terraform
+70 passed, 20 subtests passed in 0.79s
+Passed checks: 276, Failed checks: 0, Skipped checks: 0      # Checkov, Terraform
 Passed checks: 380, Failed checks: 0, Skipped checks: 0      # Checkov, rendered manifests
 verify: all checks passed
 ```
 
 Run `make help` to see each target. The separate `make test-live` target requires a manual run and provisions
 billable resources using the account associated with the `dev` AWS profile, then destroys those resources on exit.
-Live tests run private-only: a pre-flight refuses to apply a plan or manifests that would create internet-facing
-resources. Before starting it, read [`docs/live-test.md`](docs/live-test.md).
+Live tests run private-only: no internet path, a private API endpoint reached through Session Manager, images
+through ECR pull-through caches, no Route 53, and a pre-flight that refuses any plan with an internet-facing resource.
+Before starting it, read [`docs/live-test.md`](docs/live-test.md).
 
 ## Repository map
 
 ```text
 infra/terraform/
-  modules/          network, eks, karpenter, observability, argocd-bootstrap, platform (composition)
+  modules/          network, eks, karpenter, observability, private-access, argocd-bootstrap, platform
     <name>/tests/   terraform test with mocked providers (platform is covered by the root tests)
   envs/dev, prod/   thin roots: sizes, CIDRs, Kubernetes version; tests cross-check names with gitops/
   tests/mocks/      shared mock values (AWS documentation account 111122223333)
@@ -119,7 +122,7 @@ gitops/
   namespaces/       workload namespaces with Pod Security labels
   environments/     dev and prod: Kustomize root, patches, Karpenter pools, catalog-api values
 tests/              pytest render assertions
-scripts/            render.sh, install-tools.sh, test-live.sh
+scripts/            render.sh, install-tools.sh, test-live.sh, live_install.py, check_private_plan.py
 docs/               ADRs, diagrams, live test guide, cover and social preview
 ```
 
@@ -134,6 +137,7 @@ Architecture decision records follow the *Fundamentals of Software Architecture*
 | [0003](docs/adr/0003-karpenter-for-workload-nodes.md) | Karpenter for workload nodes, a managed node group for the system | Accepted |
 | [0004](docs/adr/0004-plain-resources-over-community-modules.md) | Plain resources in small local modules instead of the community EKS module | Accepted |
 | [0005](docs/adr/0005-offline-verification-boundary.md) | What offline verification proves, and what only the live test proves | Accepted |
+| [0006](docs/adr/0006-live-tests-run-private-only.md) | Live tests run private-only | Accepted |
 
 ## Security and quality gates
 

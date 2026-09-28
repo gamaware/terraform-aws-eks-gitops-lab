@@ -22,4 +22,8 @@ All notable changes to this project are documented in this file. The format foll
 - Manual `make test-live` for the dev environment, with guaranteed teardown.
 - CI calling the shared `gamaware/.github` reusable workflows pinned to commit
   `1255caafb08b06cc4658318c4dd48f9dea946c9e`, plus OSSF Scorecard.
-- Five architecture decision records, context and deployment diagrams, and the social preview.
+- Six architecture decision records, context and deployment diagrams, and the social preview.
+- Private-only live tests (ADR 0006): `private_only` mode with no internet path, VPC endpoints, a private API
+  endpoint reached through a Session Manager relay, ECR pull-through caches, a Helm install in place of Argo CD, and a
+  pre-flight (`scripts/check_private_plan.py`, `tests/test_private_live.py`) that refuses internet-facing or
+  Route 53 resources before anything is applied.

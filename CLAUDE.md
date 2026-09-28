@@ -12,14 +12,14 @@ AWS-touching target is the manual `make test-live`.
 
 | Path | Purpose |
 | --- | --- |
-| `infra/terraform/modules/<name>/` | network, eks, karpenter, observability, argocd-bootstrap, platform (composition) |
+| `infra/terraform/modules/<name>/` | network, eks, karpenter, observability, private-access, argocd-bootstrap, platform |
 | `infra/terraform/modules/<name>/tests/` | `terraform test` with mocked providers (`infra/terraform/tests/mocks/`) |
 | `infra/terraform/envs/{dev,prod}/` | thin roots; their tests cross-check names against `gitops/` |
 | `charts/catalog-api/` | Helm chart with strict `values.schema.json` and `ci/` values |
 | `gitops/{projects,applications}/` | AppProjects and environment-neutral Applications |
 | `gitops/environments/<env>/` | Kustomize root of each app-of-apps, env patches, Karpenter pools, app values |
 | `tests/` | pytest render assertions on the chart and the app-of-apps |
-| `scripts/` | `install-tools.sh`, `render.sh`, `test-live.sh` |
+| `scripts/` | `install-tools.sh`, `render.sh`, `test-live.sh`, `live_install.py`, `check_private_plan.py` |
 | `docs/adr/`, `docs/diagrams/` | decisions and architecture views |
 
 ## Commands
@@ -44,5 +44,6 @@ Terraform creates and `gitops/` references these; change both sides together. Th
 - Pin everything: provider constraints, chart versions, image digests, AMI aliases, action SHAs.
 - Only documentation placeholders: account `111122223333`, `example.com`, `203.0.113.0/24`.
 - Every Terraform behaviour change gets a `tftest.hcl` assertion; every chart or gitops change gets a pytest check.
-- Live tests run private-only: nothing in dev may be internet-facing (see `docs/live-test.md`).
+- Live tests run private-only (ADR 0006): dev with `private_only = true` has no internet path, public endpoint or
+  Route 53. `scripts/check_private_plan.py` is a byte-identical copy shared across repos; never edit it here.
 - Conventional commits, feature branches, no AI attribution anywhere.

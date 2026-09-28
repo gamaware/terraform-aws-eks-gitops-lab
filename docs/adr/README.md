@@ -10,3 +10,4 @@ Records are never deleted; a replaced decision is marked Superseded and links to
 | [0003](0003-karpenter-for-workload-nodes.md) | Karpenter for workload nodes, a managed node group for the system | Accepted |
 | [0004](0004-plain-resources-over-community-modules.md) | Plain resources in small local modules instead of the community EKS module | Accepted |
 | [0005](0005-offline-verification-boundary.md) | What offline verification proves, and what only the live test proves | Accepted |
+| [0006](0006-live-tests-run-private-only.md) | Live tests run private-only | Accepted |

@@ -15,8 +15,8 @@ enough at run time, or that Argo CD converges.
 `make verify` is the offline gate, run the same way locally and in CI: Terraform fmt, validate, tflint and mocked
 `terraform test`; `helm lint`; `kubeconform` on every rendered manifest, including Argo CD and Karpenter CRDs; pytest
 render assertions; Checkov and Trivy. `make test-live` is separate, manual and never run by CI: it applies dev to
-the `dev` AWS profile, waits for Argo CD, Karpenter and the catalog API, runs the chart's connection test pod and
-destroys everything on exit.
+the `dev` AWS profile in private-only mode ([ADR 0006](0006-live-tests-run-private-only.md)), installs Karpenter,
+the add-ons and the catalog API, runs the chart's connection test pod and destroys everything on exit.
 
 ## Consequences
 
@@ -40,8 +40,5 @@ Alternatives considered:
   on every change.
 - LocalStack: does not emulate EKS well enough to be meaningful here.
 
-Live tests run private-only. The live test deploys dev with an internal ALB limited to the VPC range, nodes without
-public IP addresses and no `0.0.0.0/0` or `::/0` security group ingress. `scripts/test-live.sh` refuses to apply
-unless `tests/test_private_live.py` passes and `scripts/check_private_plan.py` finds no internet-facing resource in
-the saved plan. The EKS API endpoint is the one public surface, limited to the operator's `/32`, because Terraform's
-Helm provider and kubectl run from the operator's machine. The internet-facing prod ALB is verified offline only.
+Live tests run private-only; [ADR 0006](0006-live-tests-run-private-only.md) records the rules, the pre-flight and
+what that leaves to offline verification, including Argo CD convergence.
