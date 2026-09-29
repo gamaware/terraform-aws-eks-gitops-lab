@@ -59,6 +59,8 @@ The following conditions define a completed lab:
 
 ## Architecture
 
+![Animated flow: Terraform builds EKS, Argo CD syncs the API, pods autoscale](docs/diagrams/architecture-animated.svg)
+
 ![Context: a platform engineer changes the repository; Terraform builds the AWS platform, Argo CD syncs the cluster](docs/diagrams/01-context.png)
 
 All changes start with a platform engineer working in one repository. For each environment, `terraform apply`
