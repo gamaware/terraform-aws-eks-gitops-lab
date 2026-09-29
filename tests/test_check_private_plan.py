@@ -82,6 +82,15 @@ FOR_ALL_VALUES_OPTIONAL_READ = allow_anyone(
     }
 )
 OPEN_PULL = json.dumps({"Statement": {"Effect": "Allow", "Principal": {"AWS": ["*"]}, "Action": "ecr:BatchGetImage"}})
+OPEN_SERVICE_PULL = json.dumps(
+    {"Statement": {"Effect": "Allow", "Principal": {"Service": "*"}, "Action": "ecr:BatchGetImage"}}
+)
+OPEN_FEDERATED_READ = json.dumps(
+    {"Statement": [{"Effect": "Allow", "Principal": {"Federated": ["*"]}, "Action": "s3:GetObject"}]}
+)
+OPEN_CANONICAL_READ = json.dumps(
+    {"Statement": [{"Effect": "Allow", "Principal": {"CanonicalUser": "*"}, "Action": "s3:GetObject"}]}
+)
 
 PRIVATE = plan(
     ("aws_lb", "app", {"internal": True, "load_balancer_type": "application"}, None),
@@ -179,6 +188,9 @@ class InternetFacing(unittest.TestCase):
         ),
         "route list unknown until apply": ("aws_route_table", {"route": []}, {"route": [{"gateway_id": True}]}),
         "public ECR policy": ("aws_ecr_repository_policy", {"policy": OPEN_PULL}, None),
+        "public policy for any service": ("aws_ecr_repository_policy", {"policy": OPEN_SERVICE_PULL}, None),
+        "public policy for any federated principal": ("aws_s3_bucket_policy", {"policy": OPEN_FEDERATED_READ}, None),
+        "public policy for any canonical user": ("aws_s3_bucket_policy", {"policy": OPEN_CANONICAL_READ}, None),
         "ECR Public repository": ("aws_ecrpublic_repository", {"repository_name": "x"}, None),
         "S3 website": ("aws_s3_bucket_website_configuration", {}, None),
         "weak public access block": ("aws_s3_bucket_public_access_block", {"block_public_policy": False}, None),
