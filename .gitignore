@@ -38,4 +38,3 @@ styles/
 
 # Lock files are committed for the environment roots only
 infra/terraform/modules/**/.terraform.lock.hcl
-
