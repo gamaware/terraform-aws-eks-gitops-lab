@@ -3,6 +3,7 @@
 import importlib.util
 import io
 import json
+import re
 import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
@@ -82,6 +83,17 @@ FOR_ALL_VALUES_OPTIONAL_READ = allow_anyone(
     }
 )
 OPEN_PULL = json.dumps({"Statement": {"Effect": "Allow", "Principal": {"AWS": ["*"]}, "Action": "ecr:BatchGetImage"}})
+OPEN_NOT_PRINCIPAL = json.dumps(
+    {
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "NotPrincipal": {"AWS": "arn:aws:iam::111122223333:root"},
+                "Action": "s3:GetObject",
+            }
+        ]
+    }
+)
 OPEN_SERVICE_PULL = json.dumps(
     {"Statement": {"Effect": "Allow", "Principal": {"Service": "*"}, "Action": "ecr:BatchGetImage"}}
 )
@@ -188,6 +200,7 @@ class InternetFacing(unittest.TestCase):
         ),
         "route list unknown until apply": ("aws_route_table", {"route": []}, {"route": [{"gateway_id": True}]}),
         "public ECR policy": ("aws_ecr_repository_policy", {"policy": OPEN_PULL}, None),
+        "Allow with NotPrincipal": ("aws_s3_bucket_policy", {"policy": OPEN_NOT_PRINCIPAL}, None),
         "public policy for any service": ("aws_ecr_repository_policy", {"policy": OPEN_SERVICE_PULL}, None),
         "public policy for any federated principal": ("aws_s3_bucket_policy", {"policy": OPEN_FEDERATED_READ}, None),
         "public policy for any canonical user": ("aws_s3_bucket_policy", {"policy": OPEN_CANONICAL_READ}, None),
@@ -220,6 +233,17 @@ VPC_ID = {"vpc_id": {"references": ["aws_vpc.main.id", "aws_vpc.main"]}}
 
 class ComputedRoutes(unittest.TestCase):
     """An initial plan marks route = unknown on a table without route blocks; only configured routes are refused."""
+
+    def test_repo_terraform_has_no_dynamic_route_blocks(self):
+        # `terraform show -json` leaves dynamic blocks out of the configuration expressions, so a dynamic
+        # "route" would look like a table without inline routes and its unknown routes would be ignored.
+        root = Path(__file__).resolve().parents[1]
+        offenders = [
+            str(path.relative_to(root))
+            for path in root.rglob("*.tf")
+            if ".terraform" not in path.parts and re.search(r'dynamic\s+"route"', path.read_text(encoding="utf-8"))
+        ]
+        assert offenders == [], "use aws_route resources instead of dynamic route blocks"
 
     def test_table_without_route_blocks_passes(self):
         doc = plan(("aws_route_table", "private", {"vpc_id": None}, {"route": True, "vpc_id": True}))
