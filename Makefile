@@ -79,15 +79,15 @@ kubeconform: tools render
 render-test:
 	$(PYTEST) -q tests
 
-## checkov: Terraform and rendered Kubernetes manifests, no skips
+## checkov: Terraform and rendered Kubernetes manifests, no check skips (.terraform holds downloaded providers)
 checkov: render
 	$(CHECKOV) --quiet --compact --framework terraform --directory $(TF_DIR) --skip-path '\.terraform'
 	$(CHECKOV) --quiet --compact --framework kubernetes --directory $(RENDERED)
 
-## trivy: misconfiguration scan of Terraform, chart and manifests (HIGH and CRITICAL fail)
+## trivy: misconfiguration scan of Terraform, chart, manifests and test hook (HIGH, CRITICAL fail)
 trivy: render
 	trivy config --quiet --exit-code 1 --severity HIGH,CRITICAL \
-	  --skip-dirs '**/.terraform' --skip-dirs .cache --skip-dirs .tools --skip-dirs $(RENDERED)-hooks .
+	  --skip-dirs '**/.terraform' --skip-dirs .cache --skip-dirs .tools .
 
 ## test-live: MANUAL. Apply dev to a real AWS account, check it, destroy it (see docs/live-test.md)
 test-live:

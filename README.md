@@ -154,7 +154,7 @@ Architecture decision records follow the *Fundamentals of Software Architecture*
 | `helm lint --strict` and the values schema | Unsafe or unknown chart values | `make helm`, shared `helm` workflow |
 | `kubeconform` | Invalid manifests, including Argo CD and Karpenter custom resources | `make kubeconform` |
 | pytest render assertions | Project escapes, wrong environment paths, wave order, unpinned charts and AMIs, pod security | `make render-test` |
-| Checkov, Trivy | IaC and Kubernetes misconfiguration (no skips) | `make checkov trivy`, shared `security` workflow |
+| Checkov, Trivy | IaC and Kubernetes misconfiguration (no check skips) | `make checkov trivy`, shared `security` workflow |
 | gitleaks, detect-secrets | Committed secrets | pre-commit, shared `secrets` workflow |
 | actionlint, zizmor | Workflow bugs and unpinned or over-privileged actions | pre-commit, shared `lint-actions` workflow |
 

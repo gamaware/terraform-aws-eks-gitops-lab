@@ -12,9 +12,10 @@ decision in code and test it offline with mocked providers.
 
 ## Decision
 
-Five local modules built from plain `aws_*` resources: `network`, `eks`, `karpenter`, `observability` and
-`argocd-bootstrap`, composed by `platform`. Environment roots in `envs/` only choose sizes, CIDR ranges and the
-Kubernetes version. Provider versions are pinned in the environment roots and locked for Linux and macOS.
+Six local modules built from plain `aws_*` resources: `network`, `eks`, `karpenter`, `observability`,
+`argocd-bootstrap` and `private-access`, composed by `platform`. Environment roots in `envs/` only choose sizes,
+CIDR ranges and the Kubernetes version. Provider versions are pinned in the environment roots and locked for Linux
+and macOS.
 
 ## Consequences
 
@@ -25,8 +26,9 @@ Kubernetes version. Provider versions are pinned in the environment roots and lo
 ## Compliance
 
 `make terraform` runs `terraform fmt`, `validate`, `tflint` (terraform and aws rulesets) and `terraform test` in every
-module with a `tests/` folder and in both roots; the roots' tests cover the `platform` composition. Checkov and
-Trivy scan the same code with no skips.
+module with a `tests/` folder and in both roots; the roots' tests cover the `platform` composition. Checkov scans
+`infra/terraform` and the rendered Kubernetes manifests; Trivy scans the whole repository tree, Terraform included.
+Neither skips a check.
 
 ## Notes
 
