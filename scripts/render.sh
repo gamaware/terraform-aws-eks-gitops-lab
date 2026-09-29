@@ -2,8 +2,8 @@
 # Renders every manifest Argo CD would apply, offline, into build/rendered/:
 #   - the catalog-api chart with each ci/ values file and each environment's values file;
 #   - each environment's app-of-apps (Kustomize) and its Karpenter NodePool and EC2NodeClass.
-# The chart's `helm test` hook goes to build/rendered-hooks/: kubeconform validates it, but the
-# policy scanners skip it because it is a short-lived test pod that runs only on a live release.
+# The chart's `helm test` hook goes to build/rendered-hooks/: kubeconform and Trivy scan it; Checkov's
+# workload checks (probes, NetworkPolicy) do not fit a short-lived test pod that runs only on a live release.
 set -euo pipefail
 
 out="${1:-build/rendered}"
