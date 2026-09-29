@@ -26,8 +26,9 @@ and macOS.
 ## Compliance
 
 `make terraform` runs `terraform fmt`, `validate`, `tflint` (terraform and aws rulesets) and `terraform test` in every
-module with a `tests/` folder and in both roots; the roots' tests cover the `platform` composition. Checkov and
-Trivy scan the same code with no check skips.
+module with a `tests/` folder and in both roots; the roots' tests cover the `platform` composition. Checkov scans
+`infra/terraform` and the rendered Kubernetes manifests; Trivy scans the whole repository tree, Terraform included.
+Neither skips a check.
 
 ## Notes
 
