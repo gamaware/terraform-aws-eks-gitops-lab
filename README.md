@@ -177,9 +177,7 @@ no cloud credentials.
 
 ## Related work
 
-This repository belongs to the [AWS DevOps portfolio](https://github.com/gamaware/aws-devops-portfolio) and supports
-the "Kubernetes on Amazon EKS" service:
-[Kubernetes on Amazon EKS on Upwork](https://www.upwork.com/freelancers/~014b3520cf9e140103).
+This repository belongs to the [AWS DevOps portfolio](https://github.com/gamaware/aws-devops-portfolio).
 
 ## License
 
